@@ -38,46 +38,46 @@ type PointCloud struct {
 	dataFloat []float32
 }
 
-func (pc *PointCloudHeader) Stride() int {
+func (pp *PointCloudHeader) Stride() int {
 	var stride int
-	for i := range pc.Fields {
-		stride += pc.Count[i] * pc.Size[i]
+	for i := range pp.Fields {
+		stride += pp.Count[i] * pp.Size[i]
 	}
 	return stride
 }
 
-func (pc *PointCloud) Float32Iterator(name string) (Float32Iterator, error) {
+func (pp *PointCloud) Float32Iterator(name string) (Float32Iterator, error) {
 	offset := 0
-	for i, fn := range pc.Fields {
+	for i, fn := range pp.Fields {
 		if fn == name {
-			if pc.Stride()&3 == 0 && offset&3 == 0 {
+			if pp.Stride()&3 == 0 && offset&3 == 0 {
 				// Aligned
-				if pc.dataFloat == nil || float.IsShadowing(pc.Data, pc.dataFloat) {
-					pc.dataFloat = float.ByteSliceAsFloat32Slice(pc.Data)
+				if pp.dataFloat == nil || float.IsShadowing(pp.Data, pp.dataFloat) {
+					pp.dataFloat = float.ByteSliceAsFloat32Slice(pp.Data)
 				}
 				return &float32Iterator{
-					data:   pc.dataFloat,
+					data:   pp.dataFloat,
 					pos:    offset / 4,
-					stride: pc.Stride() / 4,
+					stride: pp.Stride() / 4,
 				}, nil
 			}
 			return &binaryFloat32Iterator{
 				binaryIterator: binaryIterator{
-					data:   pc.Data,
+					data:   pp.Data,
 					pos:    offset,
-					stride: pc.Stride(),
+					stride: pp.Stride(),
 				},
 			}, nil
 		}
-		offset += pc.Size[i] * pc.Count[i]
+		offset += pp.Size[i] * pp.Count[i]
 	}
 	return nil, errors.New("invalid field name")
 }
 
-func (pc *PointCloud) Float32Iterators(names ...string) ([]Float32Iterator, error) {
+func (pp *PointCloud) Float32Iterators(names ...string) ([]Float32Iterator, error) {
 	var its []Float32Iterator
 	for _, name := range names {
-		it, err := pc.Float32Iterator(name)
+		it, err := pp.Float32Iterator(name)
 		if err != nil {
 			return nil, err
 		}
@@ -86,9 +86,9 @@ func (pc *PointCloud) Float32Iterators(names ...string) ([]Float32Iterator, erro
 	return its, nil
 }
 
-func (pc *PointCloud) Vec3Iterator() (Vec3Iterator, error) {
+func (pp *PointCloud) Vec3Iterator() (Vec3Iterator, error) {
 	var xyz int
-	for _, name := range pc.Fields {
+	for _, name := range pp.Fields {
 		if name == "x" && xyz == 0 {
 			xyz = 1
 		} else if name == "y" && xyz == 1 {
@@ -101,40 +101,40 @@ func (pc *PointCloud) Vec3Iterator() (Vec3Iterator, error) {
 		}
 	}
 	if xyz != 3 {
-		return pc.naiveVec3Iterator()
+		return pp.naiveVec3Iterator()
 	}
-	it, err := pc.Float32Iterator("x")
+	it, err := pp.Float32Iterator("x")
 	if err != nil {
 		return nil, err
 	}
 	vit, ok := it.(*float32Iterator)
 	if !ok {
-		return pc.naiveVec3Iterator()
+		return pp.naiveVec3Iterator()
 	}
 	return vit, nil
 }
 
-func (pc *PointCloud) naiveVec3Iterator() (Vec3Iterator, error) {
-	its, err := pc.Float32Iterators("x", "y", "z")
+func (pp *PointCloud) naiveVec3Iterator() (Vec3Iterator, error) {
+	its, err := pp.Float32Iterators("x", "y", "z")
 	if err != nil {
 		return nil, err
 	}
 	return naiveVec3Iterator{its[0], its[1], its[2]}, nil
 }
 
-func (pc *PointCloud) Uint32Iterator(name string) (Uint32Iterator, error) {
+func (pp *PointCloud) Uint32Iterator(name string) (Uint32Iterator, error) {
 	offset := 0
-	for i, fn := range pc.Fields {
+	for i, fn := range pp.Fields {
 		if fn == name {
 			return &binaryUint32Iterator{
 				binaryIterator: binaryIterator{
-					data:   pc.Data,
+					data:   pp.Data,
 					pos:    offset,
-					stride: pc.Stride(),
+					stride: pp.Stride(),
 				},
 			}, nil
 		}
-		offset += pc.Size[i] * pc.Count[i]
+		offset += pp.Size[i] * pp.Count[i]
 	}
 	return nil, errors.New("invalid field name")
 }

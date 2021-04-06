@@ -8,7 +8,7 @@ import (
 )
 
 func TestMinMaxVec3(t *testing.T) {
-	pc := PointCloud{
+	pp := PointCloud{
 		PointCloudHeader: PointCloudHeader{
 			Fields: []string{"x", "y", "z"},
 			Size:   []int{4, 4, 4},
@@ -27,7 +27,7 @@ func TestMinMaxVec3(t *testing.T) {
 	expectedMin := mat.Vec3{1.1, -20.2, 0.3}
 	expectedMax := mat.Vec3{15.1, 21.2, 4.3}
 
-	min, max, err := MinMaxVec3(&pc)
+	min, max, err := MinMaxVec3(&pp)
 	if err != nil {
 		t.Fatal(err)
 	}

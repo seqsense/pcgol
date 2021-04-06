@@ -47,34 +47,34 @@ func TestVoxelGridSurfaceModel(t *testing.T) {
 
 	for name, tt := range map[string]struct {
 		origin mat.Vec3
-		pc     dummyPointCloud
+		pp     dummyPointCloud
 	}{
 		"Zero_XZ": {
 			origin: mat.Vec3{0, 0, 0},
-			pc:     pc0,
+			pp:     pc0,
 		},
 		"NoZero_XZ": {
 			origin: mat.Vec3{0, 0, -0.1},
-			pc:     pc0,
+			pp:     pc0,
 		},
 		"Zero_XYZ": {
 			origin: mat.Vec3{0, 0, 0},
-			pc:     pc1,
+			pp:     pc1,
 		},
 		"NoZero_XYZ": {
 			origin: mat.Vec3{0, 0, -0.1},
-			pc:     pc1,
+			pp:     pc1,
 		},
 	} {
 		tt := tt
 		t.Run(name, func(t *testing.T) {
 			vg := voxelgrid.New(0.1, [3]int{8, 8, 8}, tt.origin)
-			for i, p := range tt.pc {
+			for i, p := range tt.pp {
 				vg.Add(p, i)
 			}
 
 			t.Run("Surface", func(t *testing.T) {
-				m := NewVoxelGridSurfaceModel(vg, tt.pc)
+				m := NewVoxelGridSurfaceModel(vg, tt.pp)
 				c, ok := m.Fit([]int{1, 5, 7})
 				if !ok {
 					t.Fatal("Fit failed")
@@ -88,23 +88,23 @@ func TestVoxelGridSurfaceModel(t *testing.T) {
 				}
 
 				t.Run("IsIn", func(t *testing.T) {
-					if in := c.IsIn(tt.pc[0], 0.1); !in {
+					if in := c.IsIn(tt.pp[0], 0.1); !in {
 						t.Error("Point on the surface must be determined as IsIn")
 					}
-					if in := c.IsIn(tt.pc[3], 0.1); in {
+					if in := c.IsIn(tt.pp[3], 0.1); in {
 						t.Error("Point out of the surface must not be determined as IsIn")
 					}
 				})
 			})
 			t.Run("InTheSameLine", func(t *testing.T) {
-				m := NewVoxelGridSurfaceModel(vg, tt.pc)
+				m := NewVoxelGridSurfaceModel(vg, tt.pp)
 				_, ok := m.Fit([]int{0, 1, 2})
 				if ok {
 					t.Fatal("Expected failure")
 				}
 			})
 			t.Run("SamePoint", func(t *testing.T) {
-				m := NewVoxelGridSurfaceModel(vg, tt.pc)
+				m := NewVoxelGridSurfaceModel(vg, tt.pp)
 				_, ok := m.Fit([]int{1, 1, 8})
 				if ok {
 					t.Fatal("Expected failure")

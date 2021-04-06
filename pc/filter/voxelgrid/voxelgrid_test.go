@@ -10,7 +10,7 @@ import (
 )
 
 func TestVoxelGrid(t *testing.T) {
-	pc := pc.PointCloud{
+	pp := pc.PointCloud{
 		PointCloudHeader: pc.PointCloudHeader{
 			Fields: []string{"x", "y", "z", "label"},
 			Size:   []int{4, 4, 4, 4},
@@ -29,7 +29,7 @@ func TestVoxelGrid(t *testing.T) {
 	}
 
 	vg := New(mat.Vec3{0.1, 0.1, 0.1})
-	out, err := vg.Filter(&pc)
+	out, err := vg.Filter(&pp)
 	if err != nil {
 		t.Fatal(err)
 	}

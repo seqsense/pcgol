@@ -8,7 +8,7 @@ import (
 )
 
 func TestVec3Iterator(t *testing.T) {
-	pc := PointCloud{
+	pp := PointCloud{
 		PointCloudHeader: PointCloudHeader{
 			Fields: []string{"x", "y", "z"},
 			Size:   []int{4, 4, 4},
@@ -21,7 +21,7 @@ func TestVec3Iterator(t *testing.T) {
 	}
 
 	if ok := t.Run("SetVec3", func(t *testing.T) {
-		it, err := pc.Vec3Iterator()
+		it, err := pp.Vec3Iterator()
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -42,15 +42,15 @@ func TestVec3Iterator(t *testing.T) {
 			0x00, 0x00, 0x00, 0x41, // 8.0
 			0x00, 0x00, 0x10, 0x41, // 9.0
 		}
-		if !bytes.Equal(bytesExpected, pc.Data) {
-			t.Errorf("Expected data: %v, got: %v", bytesExpected, pc.Data)
+		if !bytes.Equal(bytesExpected, pp.Data) {
+			t.Errorf("Expected data: %v, got: %v", bytesExpected, pp.Data)
 		}
 	}); !ok {
 		t.FailNow()
 	}
 
 	t.Run("Vec3", func(t *testing.T) {
-		it, err := pc.Vec3Iterator()
+		it, err := pp.Vec3Iterator()
 		if err != nil {
 			t.Fatal(err)
 		}

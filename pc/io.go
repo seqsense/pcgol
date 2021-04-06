@@ -22,7 +22,7 @@ const (
 
 func Unmarshal(r io.Reader) (*PointCloud, error) {
 	rb := bufio.NewReader(r)
-	pc := &PointCloud{}
+	pp := &PointCloud{}
 	var fmt Format
 
 L_HEADER:
@@ -41,48 +41,48 @@ L_HEADER:
 			if err != nil {
 				return nil, err
 			}
-			pc.Version = float32(f)
+			pp.Version = float32(f)
 		case "FIELDS":
-			pc.Fields = args[1:]
+			pp.Fields = args[1:]
 		case "SIZE":
-			pc.Size = make([]int, len(args)-1)
+			pp.Size = make([]int, len(args)-1)
 			for i, s := range args[1:] {
-				pc.Size[i], err = strconv.Atoi(s)
+				pp.Size[i], err = strconv.Atoi(s)
 				if err != nil {
 					return nil, err
 				}
 			}
 		case "TYPE":
-			pc.Type = args[1:]
+			pp.Type = args[1:]
 		case "COUNT":
-			pc.Count = make([]int, len(args)-1)
+			pp.Count = make([]int, len(args)-1)
 			for i, s := range args[1:] {
-				pc.Count[i], err = strconv.Atoi(s)
+				pp.Count[i], err = strconv.Atoi(s)
 				if err != nil {
 					return nil, err
 				}
 			}
 		case "WIDTH":
-			pc.Width, err = strconv.Atoi(args[1])
+			pp.Width, err = strconv.Atoi(args[1])
 			if err != nil {
 				return nil, err
 			}
 		case "HEIGHT":
-			pc.Height, err = strconv.Atoi(args[1])
+			pp.Height, err = strconv.Atoi(args[1])
 			if err != nil {
 				return nil, err
 			}
 		case "VIEWPOINT":
-			pc.Viewpoint = make([]float32, len(args)-1)
+			pp.Viewpoint = make([]float32, len(args)-1)
 			for i, s := range args[1:] {
 				f, err := strconv.ParseFloat(s, 32)
 				if err != nil {
 					return nil, err
 				}
-				pc.Viewpoint[i] = float32(f)
+				pp.Viewpoint[i] = float32(f)
 			}
 		case "POINTS":
-			pc.Points, err = strconv.Atoi(args[1])
+			pp.Points, err = strconv.Atoi(args[1])
 			if err != nil {
 				return nil, err
 			}
@@ -101,13 +101,13 @@ L_HEADER:
 		}
 	}
 	// validate
-	if len(pc.Fields) != len(pc.Size) {
+	if len(pp.Fields) != len(pp.Size) {
 		return nil, errors.New("size field size is wrong")
 	}
-	if len(pc.Fields) != len(pc.Type) {
+	if len(pp.Fields) != len(pp.Type) {
 		return nil, errors.New("type field size is wrong")
 	}
-	if len(pc.Fields) != len(pc.Count) {
+	if len(pp.Fields) != len(pp.Count) {
 		return nil, errors.New("count field size is wrong")
 	}
 
@@ -115,11 +115,11 @@ L_HEADER:
 	case Ascii:
 		panic("not implemented yet")
 	case Binary:
-		b := make([]byte, pc.Points*pc.Stride())
+		b := make([]byte, pp.Points*pp.Stride())
 		if _, err := io.ReadFull(rb, b); err != nil {
 			return nil, err
 		}
-		pc.Data = b
+		pp.Data = b
 	case BinaryCompressed:
 		var nCompressed, nUncompressed int32
 		if err := binary.Read(rb, binary.LittleEndian, &nCompressed); err != nil {
@@ -143,32 +143,32 @@ L_HEADER:
 			return nil, errors.New("wrong uncompressed size")
 		}
 
-		head := make([]int, len(pc.Fields))
-		offset := make([]int, len(pc.Fields))
+		head := make([]int, len(pp.Fields))
+		offset := make([]int, len(pp.Fields))
 		var pos, off int
-		for i := range pc.Fields {
+		for i := range pp.Fields {
 			head[i] = pos
 			offset[i] = off
-			pos += pc.Size[i] * pc.Count[i] * pc.Points
-			off += pc.Size[i] * pc.Count[i]
+			pos += pp.Size[i] * pp.Count[i] * pp.Points
+			off += pp.Size[i] * pp.Count[i]
 		}
 
-		stride := pc.Stride()
-		pc.Data = make([]byte, n)
-		for p := 0; p < pc.Points; p++ {
+		stride := pp.Stride()
+		pp.Data = make([]byte, n)
+		for p := 0; p < pp.Points; p++ {
 			for i := range head {
-				size := pc.Size[i]
+				size := pp.Size[i]
 				to := p*stride + offset[i]
 				from := head[i] + p*size
-				copy(pc.Data[to:to+size], dec[from:from+size])
+				copy(pp.Data[to:to+size], dec[from:from+size])
 			}
 		}
 	}
 
-	return pc, nil
+	return pp, nil
 }
 
-func Marshal(pc *PointCloud, w io.Writer) error {
+func Marshal(pp *PointCloud, w io.Writer) error {
 	intToStringSlice := func(d []int) []string {
 		var ret []string
 		for _, v := range d {
@@ -195,20 +195,20 @@ VIEWPOINT %s
 POINTS %d
 DATA binary
 `,
-		pc.Version,
-		strings.Join(pc.Fields, " "),
-		strings.Join(intToStringSlice(pc.Size), " "),
-		strings.Join(pc.Type, " "),
-		strings.Join(intToStringSlice(pc.Count), " "),
-		pc.Width,
-		pc.Height,
-		strings.Join(floatToStringSlice(pc.Viewpoint), " "),
-		pc.Points,
+		pp.Version,
+		strings.Join(pp.Fields, " "),
+		strings.Join(intToStringSlice(pp.Size), " "),
+		strings.Join(pp.Type, " "),
+		strings.Join(intToStringSlice(pp.Count), " "),
+		pp.Width,
+		pp.Height,
+		strings.Join(floatToStringSlice(pp.Viewpoint), " "),
+		pp.Points,
 	)
 	if _, err := w.Write([]byte(header)); err != nil {
 		return err
 	}
-	if _, err := w.Write(pc.Data); err != nil {
+	if _, err := w.Write(pp.Data); err != nil {
 		return err
 	}
 	return nil

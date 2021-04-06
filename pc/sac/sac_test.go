@@ -9,7 +9,7 @@ import (
 )
 
 func TestSAC(t *testing.T) {
-	pc := dummyPointCloud{
+	pp := dummyPointCloud{
 		mat.Vec3{0.0, 0.0, 0.0},
 		mat.Vec3{0.1, 0.0, 0.1},
 		mat.Vec3{0.2, 0.0, 0.2},
@@ -25,12 +25,12 @@ func TestSAC(t *testing.T) {
 		mat.Vec3{0.6, 0.3, 0.0}, // outlier
 	}
 	vg := voxelgrid.New(0.1, [3]int{8, 8, 8}, mat.Vec3{})
-	for i, p := range pc {
+	for i, p := range pp {
 		vg.Add(p, i)
 	}
-	m := NewVoxelGridSurfaceModel(vg, pc)
+	m := NewVoxelGridSurfaceModel(vg, pp)
 
-	s := New(NewRandomSampler(len(pc)), m)
+	s := New(NewRandomSampler(len(pp)), m)
 	if ok := s.Compute(30); !ok {
 		t.Fatal("SAC.Compute should succeed")
 	}

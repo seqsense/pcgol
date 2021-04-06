@@ -7,8 +7,8 @@ import (
 	"github.com/seqsense/pcgol/mat"
 )
 
-func MinMaxVec3(pc *PointCloud) (mat.Vec3, mat.Vec3, error) {
-	it, err := pc.Vec3Iterator()
+func MinMaxVec3(pp *PointCloud) (mat.Vec3, mat.Vec3, error) {
+	it, err := pp.Vec3Iterator()
 	if err != nil {
 		return mat.Vec3{}, mat.Vec3{}, err
 	}

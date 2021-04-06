@@ -9,7 +9,7 @@ import (
 )
 
 func TestVoxelGrid_GetSegment(t *testing.T) {
-	pc := []mat.Vec3{
+	pp := []mat.Vec3{
 		{0.00, 0.00, 0.00}, // 0
 		{0.10, 0.00, 0.00}, // 1
 		{0.50, 0.50, 0.50}, // 2
@@ -29,7 +29,7 @@ func TestVoxelGrid_GetSegment(t *testing.T) {
 	expected := []int{2, 4, 5, 6, 7, 8, 9, 11, 12, 13}
 
 	v := New(0.05, [3]int{64, 64, 64}, mat.Vec3{0.5 - 0.05*32, 0.5 - 0.05*32, 0.5 - 0.05*32})
-	for i, p := range pc {
+	for i, p := range pp {
 		v.Add(p, i)
 	}
 	indice := v.Segment(mat.Vec3{0.5, 0.5, 0.5})
