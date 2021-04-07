@@ -1,0 +1,12 @@
+coverage:
+  status:
+    project:
+      default:
+        # Allow decreasing 2% of total coverage to avoid noise.
+        threshold: 2%
+        target: auto
+    patch:
+      default:
+        target: 50%
+        base: pr
+        only_pulls: true
