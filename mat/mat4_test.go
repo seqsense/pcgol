@@ -1,10 +1,30 @@
 package mat
 
 import (
+	"reflect"
 	"testing"
 )
 
-func TestMul(t *testing.T) {
+func TestMat4_Floats(t *testing.T) {
+	m := Mat4{
+		1, 2, 3, 4,
+		5, 6, 7, 8,
+		9, 10, 11, 12,
+		13, 14, 15, 16,
+	}
+	f := m.Floats()
+	expected := [16]float32{
+		1, 2, 3, 4,
+		5, 6, 7, 8,
+		9, 10, 11, 12,
+		13, 14, 15, 16,
+	}
+	if !reflect.DeepEqual(expected, f) {
+		t.Errorf("Expected %v, got %v", expected, f)
+	}
+}
+
+func TestMat4_Mul(t *testing.T) {
 	m0 := Translate(0.1, 0.2, 0.3)
 	m1 := Scale(1.1, 1.2, 1.3)
 	m2 := Rotate(1, 0, 0, 0.1)
@@ -27,7 +47,7 @@ func TestMul(t *testing.T) {
 	}
 }
 
-func TestInvAffine(t *testing.T) {
+func TestMat4_InvAffine(t *testing.T) {
 	m0 := Translate(0.1, 0.2, 0.3)
 	m1 := Scale(1.1, 1.2, 1.3)
 	m2 := Rotate(1, 0, 0, 0.5)
@@ -65,7 +85,7 @@ func transformNaive(m Mat4, a Vec3) Vec3 {
 	return out
 }
 
-func TestTransform(t *testing.T) {
+func TestMat4_Transform(t *testing.T) {
 	m0 := Translate(0.1, 0.2, 0.3)
 	m1 := Scale(1.1, 1.2, 1.3)
 	m2 := Rotate(1, 0, 0, 0.1)
@@ -88,7 +108,7 @@ func TestTransform(t *testing.T) {
 	}
 }
 
-func TestDet(t *testing.T) {
+func TestMat4_Det(t *testing.T) {
 	m := Mat4{
 		1, 1, 1, -1,
 		1, 1, -1, 1,
@@ -100,7 +120,7 @@ func TestDet(t *testing.T) {
 	}
 }
 
-func TestInv(t *testing.T) {
+func TestMat4_Inv(t *testing.T) {
 	m0 := Translate(0.1, 0.2, 0.3)
 	m1 := Scale(1.1, 1.2, 1.3)
 	m2 := Rotate(1, 0, 0, 0.5)

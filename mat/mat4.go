@@ -2,6 +2,10 @@ package mat
 
 type Mat4 [16]float32
 
+func (m Mat4) Floats() [16]float32 {
+	return m
+}
+
 func (m Mat4) Mul(a Mat4) Mat4 {
 	var out Mat4
 	for i := 0; i < 4; i++ {
