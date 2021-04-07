@@ -1,10 +1,20 @@
 package mat
 
 import (
+	"reflect"
 	"testing"
 )
 
-func TestCross(t *testing.T) {
+func TestVec3_Floats(t *testing.T) {
+	v := Vec3{1, 2, 3}
+	f := v.Floats()
+	expected := [3]float32{1, 2, 3}
+	if !reflect.DeepEqual(expected, f) {
+		t.Errorf("Expected %v, got %v", expected, f)
+	}
+}
+
+func TestVec3_Cross(t *testing.T) {
 	x := Vec3{1, 0, 0}
 	y := Vec3{0, 1, 0}
 

@@ -11,6 +11,10 @@ func NewVec3(x, y, z float32) Vec3 {
 	return Vec3{x, y, z}
 }
 
+func (v Vec3) Floats() [3]float32 {
+	return v
+}
+
 func (v Vec3) NormSq() float32 {
 	return v[0]*v[0] + v[1]*v[1] + v[2]*v[2]
 }
