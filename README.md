@@ -1,5 +1,7 @@
 ## Point cloud library for Go (independent of PCL)
 
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
 ## Overview
 
 This package implements algorithms to process point cloud data on Go.
