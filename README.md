@@ -7,18 +7,19 @@
 This package implements algorithms to process point cloud data on Go.
 It's not a clone or porting of [PCL](https://pointclouds.org/).
 
-- ./mat
-    > Linear algebra library for point cloud processing
-- ./pc
-    > Binary point cloud data marshaller/unmarshaller and iterators
-  - ./pc/filter
-      > Point cloud filters like VoxelGrid downsampling filter
-  - ./pc/storage
-      > Storage to handle spacial structure of point cloud data. Mainly used to implement other subpackages
-  - ./pc/segmentation
-      > Point cloud segmentation algorithms
-  - ./pc/sac
-      > Sample consensus based model parameter estimators
+## Package structure
+
+<dl>
+  <dt>mat</dt><dd>Linear algebra library for point cloud processing</dd>
+  <dt>pc</dt><dd>Binary point cloud data marshaller/unmarshaller and iterators
+    <dl>
+      <dt>pc/filter</dt><dd>Point cloud filters like VoxelGrid downsampling filter</dd>
+      <dt>pc/storage</dt><dd>Storage to handle spacial structure of point cloud data</dd>
+      <dt>pc/segmentation</dt><dd>Point cloud segmentation algorithms</dd>
+      <dt>pc/sac</dt><dd>Sample consensus based model parameter estimators</dd>
+    </dl>
+  <dd>
+</dl>
 
 ## License
 
