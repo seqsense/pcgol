@@ -1,6 +1,7 @@
 ## Point cloud library for Go (independent of PCL)
 
 [![ci](https://github.com/seqsense/pcgol/actions/workflows/ci.yml/badge.svg)](https://github.com/seqsense/pcgol/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/seqsense/pcgol/branch/master/graph/badge.svg?token=tBu1O2VcOR)](https://codecov.io/gh/seqsense/pcgol)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 ## Overview
