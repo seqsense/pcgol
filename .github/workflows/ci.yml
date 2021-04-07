@@ -27,7 +27,11 @@ jobs:
         run: |
           go vet ./...
           go build ./...
-          go test ./... -race
+          go test ./... -race -v -coverprofile=cover.out -covermode atomic -coverpkg ./...
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v1
+        with:
+          file: ./cover.out
   tidy:
     runs-on: ubuntu-latest
     steps:
