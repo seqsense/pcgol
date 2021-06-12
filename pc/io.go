@@ -6,10 +6,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"strconv"
 	"strings"
 
-	"github.com/zhuyie/golzf"
+	lzf "github.com/zhuyie/golzf"
 )
 
 type Format int
@@ -23,7 +24,7 @@ const (
 func Unmarshal(r io.Reader) (*PointCloud, error) {
 	rb := bufio.NewReader(r)
 	pp := &PointCloud{}
-	var fmt Format
+	var ppFmt Format
 
 L_HEADER:
 	for {
@@ -89,11 +90,11 @@ L_HEADER:
 		case "DATA":
 			switch args[1] {
 			case "ascii":
-				fmt = Ascii
+				ppFmt = Ascii
 			case "binary":
-				fmt = Binary
+				ppFmt = Binary
 			case "binary_compressed":
-				fmt = BinaryCompressed
+				ppFmt = BinaryCompressed
 			default:
 				return nil, errors.New("unknown data format")
 			}
@@ -111,9 +112,43 @@ L_HEADER:
 		return nil, errors.New("count field size is wrong")
 	}
 
-	switch fmt {
+	switch ppFmt {
 	case Ascii:
-		panic("not implemented yet")
+		pp.Data = make([]byte, pp.Points*pp.Stride())
+		offset := 0
+		for {
+			line, _, err := rb.ReadLine()
+			if err != nil && err != io.EOF {
+				return nil, err
+			}
+			if err == io.EOF {
+				break
+			}
+			pointData := strings.Fields(string(line))
+			for i, f := range pp.Type {
+				if f == "F" {
+					v, err := strconv.ParseFloat(pointData[i], 32)
+					if err != nil {
+						return nil, err
+					}
+					b := math.Float32bits(float32(v))
+					binary.LittleEndian.PutUint32(
+						pp.Data[offset:offset+4], b,
+					)
+				}
+
+				if f == "U" {
+					v, _ := strconv.ParseUint(pointData[i], 10, 32)
+					if err != nil {
+						return nil, err
+					}
+					binary.LittleEndian.PutUint32(
+						pp.Data[offset:offset+4], uint32(v),
+					)
+				}
+				offset += pp.Size[i]
+			}
+		}
 	case Binary:
 		b := make([]byte, pp.Points*pp.Stride())
 		if _, err := io.ReadFull(rb, b); err != nil {
