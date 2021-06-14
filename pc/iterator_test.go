@@ -69,4 +69,33 @@ func TestVec3Iterator(t *testing.T) {
 			it.Incr()
 		}
 	})
+
+	pp.PointCloudHeader = PointCloudHeader{
+		Fields: []string{"xyz"},
+		Size:   []int{4},
+		Count:  []int{3},
+		Width:  3,
+		Height: 1,
+	}
+	t.Run("Vec3_XYZ", func(t *testing.T) {
+		it, err := pp.Vec3Iterator()
+		if err != nil {
+			t.Fatal(err)
+		}
+		expectedVecs := []mat.Vec3{
+			{1, 2, 3},
+			{4, 5, 6},
+			{7, 8, 9},
+		}
+		for i, expectedVec := range expectedVecs {
+			if !it.IsValid() {
+				t.Fatalf("Iterator is invalid at position %d", i)
+			}
+			if v := it.Vec3(); !v.Equal(expectedVec) {
+				t.Errorf("Expected Vec3: %v, got: %v", expectedVec, v)
+			}
+			it.Incr()
+		}
+	})
+
 }
