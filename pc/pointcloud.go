@@ -88,9 +88,16 @@ func (pp *PointCloud) Float32Iterators(names ...string) ([]Float32Iterator, erro
 
 func (pp *PointCloud) Vec3Iterator() (Vec3Iterator, error) {
 	var xyz int
+	var fieldName string
 	for _, name := range pp.Fields {
+		if name == "xyz" {
+			xyz = 3
+			fieldName = name
+			break
+		}
 		if name == "x" && xyz == 0 {
 			xyz = 1
+			fieldName = name
 		} else if name == "y" && xyz == 1 {
 			xyz = 2
 		} else if name == "z" && xyz == 2 {
@@ -103,7 +110,7 @@ func (pp *PointCloud) Vec3Iterator() (Vec3Iterator, error) {
 	if xyz != 3 {
 		return pp.naiveVec3Iterator()
 	}
-	it, err := pp.Float32Iterator("x")
+	it, err := pp.Float32Iterator(fieldName)
 	if err != nil {
 		return nil, err
 	}
