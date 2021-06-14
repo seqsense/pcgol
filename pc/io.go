@@ -115,7 +115,7 @@ L_HEADER:
 	switch ppFmt {
 	case Ascii:
 		pp.Data = make([]byte, pp.Points*pp.Stride())
-		data_offset := 0
+		dataOffset := 0
 		for {
 			line, _, err := rb.ReadLine()
 			if err != nil && err != io.EOF {
@@ -125,31 +125,31 @@ L_HEADER:
 				break
 			}
 			pointData := strings.Fields(string(line))
-			line_offset := 0
+			lineOffset := 0
 			for i, f := range pp.Type {
 				for j := 0; j < pp.Count[i]; j++ {
 					switch f {
 					case "F":
-						v, err := strconv.ParseFloat(pointData[line_offset+j], 32)
+						v, err := strconv.ParseFloat(pointData[lineOffset+j], 32)
 						if err != nil {
 							return nil, err
 						}
 						b := math.Float32bits(float32(v))
 						binary.LittleEndian.PutUint32(
-							pp.Data[data_offset:data_offset+4], b,
+							pp.Data[dataOffset:dataOffset+4], b,
 						)
 					case "U":
-						v, _ := strconv.ParseUint(pointData[line_offset+j], 10, 32)
+						v, _ := strconv.ParseUint(pointData[lineOffset+j], 10, 32)
 						if err != nil {
 							return nil, err
 						}
 						binary.LittleEndian.PutUint32(
-							pp.Data[data_offset:data_offset+4], uint32(v),
+							pp.Data[dataOffset:dataOffset+4], uint32(v),
 						)
 					}
-					data_offset += pp.Size[i]
+					dataOffset += pp.Size[i]
 				}
-				line_offset += pp.Count[i]
+				lineOffset += pp.Count[i]
 			}
 		}
 	case Binary:
