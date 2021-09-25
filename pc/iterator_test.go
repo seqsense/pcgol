@@ -97,5 +97,66 @@ func TestVec3Iterator(t *testing.T) {
 			it.Incr()
 		}
 	})
+}
 
+func BenchmarkFloat32Iterator(b *testing.B) {
+	const num = 1024
+	testCases := map[string]struct {
+		data func() Vec3Iterator
+	}{
+		"binaryIterator": {
+			data: func() Vec3Iterator {
+				data := make([]byte, 3*4*num)
+				return naiveVec3Iterator{
+					&binaryFloat32Iterator{
+						binaryIterator: binaryIterator{
+							data:   data,
+							pos:    0,
+							stride: 3 * 4,
+						},
+					},
+					&binaryFloat32Iterator{
+						binaryIterator: binaryIterator{
+							data:   data,
+							pos:    4,
+							stride: 3 * 4,
+						},
+					},
+					&binaryFloat32Iterator{
+						binaryIterator: binaryIterator{
+							data:   data,
+							pos:    8,
+							stride: 3 * 4,
+						},
+					},
+				}
+			},
+		},
+		"float32Iterator": {
+			data: func() Vec3Iterator {
+				return &float32Iterator{
+					data:   make([]float32, 3*num),
+					pos:    0,
+					stride: 3,
+				}
+			},
+		},
+	}
+	b.Run("Vec3", func(b *testing.B) {
+		for name, tt := range testCases {
+			b.Run(name, func(b *testing.B) {
+				var in, out Vec3Iterator
+				for i := 0; i < b.N; i++ {
+					if i%num == 0 {
+						b.StopTimer()
+						in, out = tt.data(), tt.data()
+						b.StartTimer()
+					}
+					out.SetVec3(in.Vec3())
+					in.Incr()
+					out.Incr()
+				}
+			})
+		}
+	})
 }
