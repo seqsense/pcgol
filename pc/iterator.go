@@ -98,18 +98,20 @@ func (i *float32Iterator) SetFloat32(v float32) {
 }
 
 func (i *float32Iterator) Vec3() mat.Vec3 {
-	return mat.Vec3{i.data[i.pos], i.data[i.pos+1], i.data[i.pos+2]}
+	var ret mat.Vec3
+	copy(ret[:], i.data[i.pos:i.pos+3])
+	return ret
 }
 
 func (i *float32Iterator) Vec3At(j int) mat.Vec3 {
 	pos := i.pos + i.stride*j
-	return mat.Vec3{i.data[pos], i.data[pos+1], i.data[pos+2]}
+	var ret mat.Vec3
+	copy(ret[:], i.data[pos:pos+3])
+	return ret
 }
 
 func (i *float32Iterator) SetVec3(v mat.Vec3) {
-	i.data[i.pos] = v[0]
-	i.data[i.pos+1] = v[1]
-	i.data[i.pos+2] = v[2]
+	copy(i.data[i.pos:i.pos+3], v[:])
 }
 
 type naiveVec3Iterator [3]Float32Iterator
