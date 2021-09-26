@@ -77,14 +77,14 @@ type PointCloud struct {
 	dataFloat []float32
 }
 
-// CopyTo copies n points to dst.
+// Copy copies n points from src to dst.
 // Source and destination PointClouds must have same field structure.
-func (pp *PointCloud) CopyTo(dst *PointCloud, dstIndex, srcIndex, n int) {
-	stride := pp.Stride()
+func Copy(dst *PointCloud, dstIndex int, src *PointCloud, srcIndex, n int) {
+	stride := src.Stride()
 	si := srcIndex * stride
 	di := dstIndex * stride
 	nb := n * stride
-	copy(dst.Data[di:di+nb], pp.Data[si:si+nb])
+	copy(dst.Data[di:di+nb], src.Data[si:si+nb])
 }
 
 func (pp *PointCloud) Float32Iterator(name string) (Float32Iterator, error) {

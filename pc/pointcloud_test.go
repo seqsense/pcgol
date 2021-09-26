@@ -89,7 +89,7 @@ func TestPointCloudHeader_TypeEqual(t *testing.T) {
 	}
 }
 
-func TestPointCloud_CopyTo(t *testing.T) {
+func TestCopy(t *testing.T) {
 	pp0 := &PointCloud{
 		PointCloudHeader: PointCloudHeader{
 			Fields: []string{"x", "y", "z"},
@@ -118,7 +118,7 @@ func TestPointCloud_CopyTo(t *testing.T) {
 		Data:             make([]byte, 2*4*3),
 	}
 	pp1.Width = 2
-	pp0.CopyTo(pp1, 0, 1, 2)
+	Copy(pp1, 0, pp0, 1, 2)
 
 	bytesExpected := []byte{
 		0x00, 0x00, 0x80, 0x40, // 4.0
