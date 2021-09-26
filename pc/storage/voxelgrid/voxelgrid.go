@@ -44,6 +44,11 @@ func (v *VoxelGrid) Add(p mat.Vec3, index int) bool {
 	return true
 }
 
+func (v *VoxelGrid) AddByAddr(a int, index int) {
+	ptr := &v.voxel[a]
+	*ptr = append(*ptr, index)
+}
+
 func (v *VoxelGrid) Get(p mat.Vec3) []int {
 	addr, ok := v.Addr(p)
 	if !ok {
