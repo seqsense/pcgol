@@ -26,6 +26,18 @@ func TestPointCloudHeader_TypeEqual(t *testing.T) {
 		Type:   []string{"F", "F"},
 		Count:  []int{1, 1},
 	}
+	ph3 := PointCloudHeader{
+		Fields: []string{"x", "y", "j"},
+		Size:   []int{4, 4, 2},
+		Type:   []string{"F", "F", "U"},
+		Count:  []int{1, 1, 1},
+	}
+	ph4 := PointCloudHeader{
+		Fields: []string{"x", "y", "i"},
+		Size:   []int{4, 4, 4},
+		Type:   []string{"F", "F", "U"},
+		Count:  []int{1, 1, 1},
+	}
 
 	testCases := map[string]struct {
 		ph0, ph1 *PointCloudHeader
@@ -34,11 +46,6 @@ func TestPointCloudHeader_TypeEqual(t *testing.T) {
 		"SameFileds": {
 			ph0:      &ph0,
 			ph1:      &ph1,
-			expected: true,
-		},
-		"SameFileds_Reversed": {
-			ph0:      &ph1,
-			ph1:      &ph0,
 			expected: true,
 		},
 		"SamePtr": {
@@ -51,20 +58,34 @@ func TestPointCloudHeader_TypeEqual(t *testing.T) {
 			ph1:      &ph2,
 			expected: false,
 		},
-		"DifferentFields_Reversed": {
-			ph0:      &ph2,
-			ph1:      &ph0,
+		"DifferentFieldName": {
+			ph0:      &ph0,
+			ph1:      &ph3,
+			expected: false,
+		},
+		"DifferentFieldSize": {
+			ph0:      &ph0,
+			ph1:      &ph4,
 			expected: false,
 		},
 	}
 	for name, tt := range testCases {
 		tt := tt
-		t.Run(name, func(t *testing.T) {
-			ret := tt.ph0.TypeEqual(tt.ph1)
-			if ret != tt.expected {
-				t.Errorf("Expected %v, got %v", tt.expected, ret)
+		for suffix, swap := range map[string]bool{
+			"":          false,
+			"_Reversed": true,
+		} {
+			ph0, ph1 := tt.ph0, tt.ph1
+			if swap {
+				ph0, ph1 = ph1, ph0
 			}
-		})
+			t.Run(name+suffix, func(t *testing.T) {
+				ret := ph0.TypeEqual(ph1)
+				if ret != tt.expected {
+					t.Errorf("Expected %v, got %v", tt.expected, ret)
+				}
+			})
+		}
 	}
 }
 
