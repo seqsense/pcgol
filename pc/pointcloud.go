@@ -32,7 +32,10 @@ func (h *PointCloudHeader) Clone() PointCloudHeader {
 
 // TypeEqual checks that the PointClouds have same field structure.
 func (h *PointCloudHeader) TypeEqual(pch *PointCloudHeader) bool {
-	if len(h.Fields) != len(pch.Fields) {
+	if len(h.Fields) != len(pch.Fields) ||
+		len(h.Size) != len(pch.Size) ||
+		len(h.Type) != len(pch.Type) ||
+		len(h.Count) != len(pch.Count) {
 		return false
 	}
 	for i, f := range h.Fields {
@@ -40,24 +43,15 @@ func (h *PointCloudHeader) TypeEqual(pch *PointCloudHeader) bool {
 			return false
 		}
 	}
-	if len(h.Size) != len(pch.Size) {
-		return false
-	}
 	for i, s := range h.Size {
 		if pch.Size[i] != s {
 			return false
 		}
 	}
-	if len(h.Type) != len(pch.Type) {
-		return false
-	}
 	for i, t := range h.Type {
 		if pch.Type[i] != t {
 			return false
 		}
-	}
-	if len(h.Count) != len(pch.Count) {
-		return false
 	}
 	for i, c := range h.Count {
 		if pch.Count[i] != c {
