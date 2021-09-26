@@ -30,12 +30,35 @@ func (h *PointCloudHeader) Clone() PointCloudHeader {
 	}
 }
 
-type PointCloud struct {
-	PointCloudHeader
-	Points int
-
-	Data      []byte
-	dataFloat []float32
+// TypeEqual checks that the PointClouds have same field structure.
+func (h *PointCloudHeader) TypeEqual(pch *PointCloudHeader) bool {
+	if len(h.Fields) != len(pch.Fields) ||
+		len(h.Size) != len(pch.Size) ||
+		len(h.Type) != len(pch.Type) ||
+		len(h.Count) != len(pch.Count) {
+		return false
+	}
+	for i, f := range h.Fields {
+		if pch.Fields[i] != f {
+			return false
+		}
+	}
+	for i, s := range h.Size {
+		if pch.Size[i] != s {
+			return false
+		}
+	}
+	for i, t := range h.Type {
+		if pch.Type[i] != t {
+			return false
+		}
+	}
+	for i, c := range h.Count {
+		if pch.Count[i] != c {
+			return false
+		}
+	}
+	return true
 }
 
 func (pp *PointCloudHeader) Stride() int {
@@ -44,6 +67,24 @@ func (pp *PointCloudHeader) Stride() int {
 		stride += pp.Count[i] * pp.Size[i]
 	}
 	return stride
+}
+
+type PointCloud struct {
+	PointCloudHeader
+	Points int
+
+	Data      []byte
+	dataFloat []float32
+}
+
+// Copy copies n points from src to dst.
+// Source and destination PointClouds must have same field structure.
+func Copy(dst *PointCloud, dstIndex int, src *PointCloud, srcIndex, n int) {
+	stride := src.Stride()
+	si := srcIndex * stride
+	di := dstIndex * stride
+	nb := n * stride
+	copy(dst.Data[di:di+nb], src.Data[si:si+nb])
 }
 
 func (pp *PointCloud) Float32Iterator(name string) (Float32Iterator, error) {
