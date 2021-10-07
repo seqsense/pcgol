@@ -64,7 +64,7 @@ func (i *binaryFloat32Iterator) SetFloat32(v float32) {
 }
 
 func (i *binaryFloat32Iterator) IsValid() bool {
-	return i.pos+4 == len(i.data)
+	return i.pos+4 <= len(i.data)
 }
 
 type float32Iterator struct {

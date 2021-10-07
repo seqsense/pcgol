@@ -411,6 +411,75 @@ func TestUint32IteratorAndFloat32Iterator(t *testing.T) {
 	})
 }
 
+func TestBinaryFloat32Iterator(t *testing.T) {
+
+	data := make([]byte, 3*4)
+
+	if ok := t.Run("SetFloat32", func(t *testing.T) {
+		it := binaryFloat32Iterator{
+			binaryIterator{
+				data:   data,
+				pos:    0,
+				stride: 4,
+			},
+		}
+		it.SetFloat32(1.0)
+		it.Incr()
+		it.SetFloat32(2.0)
+		it.Incr()
+		it.SetFloat32(3.0)
+		bytesExpected := []byte{
+			0x00, 0x00, 0x80, 0x3F, // 1.0
+			0x00, 0x00, 0x00, 0x40, // 2.0
+			0x00, 0x00, 0x40, 0x40, // 3.0
+		}
+		if !bytes.Equal(bytesExpected, data) {
+			t.Errorf("Expected data: %v, got: %v", bytesExpected, data)
+		}
+	}); !ok {
+		t.FailNow()
+	}
+
+	t.Run("Float32", func(t *testing.T) {
+		it := binaryFloat32Iterator{
+			binaryIterator{
+				data:   data,
+				pos:    0,
+				stride: 4,
+			},
+		}
+		expectedXs := []float32{1.0, 2.0, 3.0}
+		for i, expectedX := range expectedXs {
+			if !it.IsValid() {
+				t.Fatalf("Iterator is invalid at position %d", i)
+			}
+			if v := it.Float32(); v != expectedX {
+				t.Errorf("Expected: %v, got: %v", expectedX, v)
+			}
+			it.Incr()
+		}
+	})
+
+	t.Run("Float32At", func(t *testing.T) {
+		it := binaryFloat32Iterator{
+			binaryIterator{
+				data:   data,
+				pos:    0,
+				stride: 4,
+			},
+		}
+		expectedXs := []float32{1.0, 2.0, 3.0}
+		for i, expectedX := range expectedXs {
+			if !it.IsValid() {
+				t.Fatalf("Iterator is invalid at position %d", i)
+			}
+			if v := it.Float32At(i); v != expectedX {
+				t.Errorf("Expected: %v, got: %v", expectedX, v)
+			}
+		}
+	})
+}
+
 func BenchmarkFloat32Iterator(b *testing.B) {
 	const num = 1024
 	testCases := map[string]struct {
