@@ -132,7 +132,7 @@ func TestUint32Iterator(t *testing.T) {
 		Points: 3,
 		Data:   make([]byte, 3*4),
 	}
-	if ok := t.Run("SeUint32", func(t *testing.T) {
+	if ok := t.Run("SetUint32", func(t *testing.T) {
 		it, err := pp.Uint32Iterator("label")
 		if err != nil {
 			t.Fatal(err)
@@ -202,7 +202,7 @@ func TestFloat32IteratorAndUint32Iterator(t *testing.T) {
 		Points: 3,
 		Data:   make([]byte, 3*4*2),
 	}
-	if ok := t.Run("SetFloat32SeUint32", func(t *testing.T) {
+	if ok := t.Run("SetFloat32SetUint32", func(t *testing.T) {
 		it, err := pp.Float32Iterator("x")
 		if err != nil {
 			t.Fatal(err)
