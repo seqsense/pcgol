@@ -55,10 +55,7 @@ func TestKDtree(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	kdt, err := New(it)
-	if err != nil {
-		t.Fatal(err)
-	}
+	kdt := New(it)
 
 	expectedTree := &KDTree{
 		root: &node{
@@ -215,11 +212,7 @@ func TestKDtree_randomCloud(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	kdt, err := New(it)
-	if err != nil {
-		t.Fatal(err)
-	}
-
+	kdt := New(it)
 	ns := &naiveSearch{it}
 
 	for i := 0; i < nPoints; i++ {
@@ -308,10 +301,7 @@ func BenchmarkKDTree_Nearest(b *testing.B) {
 			if err != nil {
 				b.Fatal(err)
 			}
-			kdt, err := New(it)
-			if err != nil {
-				b.Fatal(err)
-			}
+			kdt := New(it)
 			ns := &naiveSearch{it}
 
 			itTargets, err := targets.Vec3Iterator()

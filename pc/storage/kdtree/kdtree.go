@@ -23,7 +23,7 @@ type node struct {
 	dim      int
 }
 
-func New(ra pc.Vec3RandomAccessor) (*KDTree, error) {
+func New(ra pc.Vec3RandomAccessor) *KDTree {
 	ids := make([]int, ra.Len())
 	for i := 0; i < ra.Len(); i++ {
 		ids[i] = i
@@ -39,7 +39,7 @@ func New(ra pc.Vec3RandomAccessor) (*KDTree, error) {
 				return make([]*node, 0, maxDepth)
 			},
 		},
-	}, nil
+	}
 }
 
 func (k *KDTree) newNodeArray(n0 *node) []*node {
