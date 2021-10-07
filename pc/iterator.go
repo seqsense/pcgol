@@ -18,7 +18,7 @@ func (i *binaryIterator) Incr() {
 }
 
 func (i *binaryIterator) IsValid() bool {
-	return i.pos+i.stride <= len(i.data)
+	return i.pos+i.stride <= len(i.data) || i.pos+4 == len(i.data)
 }
 
 func (i *binaryIterator) Len() int {
@@ -78,7 +78,7 @@ func (i *float32Iterator) Incr() {
 }
 
 func (i *float32Iterator) IsValid() bool {
-	return i.pos+i.stride <= len(i.data)
+	return i.pos+i.stride <= len(i.data) || i.pos+1 == len(i.data)
 }
 
 func (i *float32Iterator) Len() int {
