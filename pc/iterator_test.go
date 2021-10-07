@@ -155,6 +155,22 @@ func TestUint32Iterator(t *testing.T) {
 		t.FailNow()
 	}
 
+	t.Run("Uint32At", func(t *testing.T) {
+		it, err := pp.Uint32Iterator("label")
+		if err != nil {
+			t.Fatal(err)
+		}
+		expectedLabels := []uint32{1, 2, 3}
+		for i, expectedLabel := range expectedLabels {
+			if !it.IsValid() {
+				t.Fatalf("Iterator is invalid at position %d", i)
+			}
+			if v := it.Uint32At(i); v != expectedLabel {
+				t.Errorf("Expected: %v, got: %v", expectedLabel, v)
+			}
+		}
+	})
+
 	t.Run("Uint32", func(t *testing.T) {
 		it, err := pp.Uint32Iterator("label")
 		if err != nil {
@@ -166,7 +182,7 @@ func TestUint32Iterator(t *testing.T) {
 				t.Fatalf("Iterator is invalid at position %d", i)
 			}
 			if v := it.Uint32(); v != expectedLabel {
-				t.Errorf("Expected Vec3: %v, got: %v", expectedLabel, v)
+				t.Errorf("Expected: %v, got: %v", expectedLabel, v)
 			}
 			it.Incr()
 		}
@@ -237,7 +253,7 @@ func TestFloat32IteratorAndUint32Iterator(t *testing.T) {
 				t.Fatalf("Iterator is invalid at position %d", i)
 			}
 			if v := it.Float32(); v != expectedX {
-				t.Errorf("Expected Vec3: %v, got: %v", expectedX, v)
+				t.Errorf("Expected: %v, got: %v", expectedX, v)
 			}
 			it.Incr()
 		}
@@ -248,9 +264,39 @@ func TestFloat32IteratorAndUint32Iterator(t *testing.T) {
 				t.Fatalf("Iterator is invalid at position %d", i)
 			}
 			if v := lt.Uint32(); v != expectedLabel {
-				t.Errorf("Expected Vec3: %v, got: %v", expectedLabel, v)
+				t.Errorf("Expected: %v, got: %v", expectedLabel, v)
 			}
 			lt.Incr()
+		}
+	})
+
+	t.Run("Float32Uint32At", func(t *testing.T) {
+		it, err := pp.Float32Iterator("x")
+		if err != nil {
+			t.Fatal(err)
+		}
+		lt, err := pp.Uint32Iterator("label")
+		if err != nil {
+			t.Fatal(err)
+		}
+		expectedXs := []float32{1.0, 2.0, 3.0}
+		for i, expectedX := range expectedXs {
+			if !it.IsValid() {
+				t.Fatalf("Iterator is invalid at position %d", i)
+			}
+			if v := it.Float32At(i); v != expectedX {
+				t.Errorf("Expected Vec3: %v, got: %v", expectedX, v)
+			}
+		}
+
+		expectedLabels := []uint32{1, 2, 3}
+		for i, expectedLabel := range expectedLabels {
+			if !lt.IsValid() {
+				t.Fatalf("Iterator is invalid at position %d", i)
+			}
+			if v := lt.Uint32At(i); v != expectedLabel {
+				t.Errorf("Expected: %v, got: %v", expectedLabel, v)
+			}
 		}
 	})
 }
