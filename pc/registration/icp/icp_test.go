@@ -1,7 +1,6 @@
 package icp
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/seqsense/pcgol/mat"
@@ -11,43 +10,48 @@ import (
 
 func TestPointToPointICPGradient(t *testing.T) {
 	base := pc.Vec3Slice{
-		mat.Vec3{0, 0, 0},
-		mat.Vec3{1, 1, 0},
-		mat.Vec3{2, 2, 0},
-		mat.Vec3{3, 1, 1},
-		mat.Vec3{4, 0, 0},
+		mat.Vec3{-2, 0, 0},
+		mat.Vec3{-1, 1, 0},
+		mat.Vec3{0, 2, 0},
+		mat.Vec3{1, 1, 1},
+		mat.Vec3{2, 0, 0},
 	}
-	for _, delta := range []mat.Vec3{
-		{0, 0, 0},
-		{0.25, 0.125, -0.125},
-		{0.5, 0.5, 1.0},
-		{-0.5, -0.5, 1.0},
+	for name, delta := range map[string]mat.Mat4{
+		"Trans(0,0,0)":                  mat.Translate(0, 0, 0),
+		"Trans(0.25,0.125,-0.125)":      mat.Translate(0.25, 0.125, -0.125),
+		"Trans(0.5,0.5,1)":              mat.Translate(0.5, 0.5, 1.0),
+		"Trans(-0.5,-0.5,0)":            mat.Translate(-0.5, -0.5, 0.0),
+		"Rot(1,0,0,0.2)":                mat.Rotate(1, 0, 0, 0.2),
+		"Rot(1,0,0,-0.2)":               mat.Rotate(1, 0, 0, -0.2),
+		"Rot(1,0,0,0.1)Trans(0.2,0,0)":  mat.Rotate(1, 0, 0, 0.1).Mul(mat.Translate(0.2, 0, 0)),
+		"Rot(1,0,0,0.1)Trans(-0.2,0,0)": mat.Rotate(1, 0, 0, 0.1).Mul(mat.Translate(-0.2, 0, 0)),
 	} {
-		t.Run(fmt.Sprintf("(%0.3f,%0.3f,%0.3f)", delta[0], delta[1], delta[2]),
-			func(t *testing.T) {
-				expectedTrans := mat.Translate(-delta[0], -delta[1], -delta[2])
-				target := pc.Vec3Slice{
-					base[2].Add(delta),
-					base[3].Add(delta),
-					base[4].Add(delta),
-				}
-				kdt := kdtree.New(base)
-				ppicp := &PointToPointICPGradient{
-					Evaluator: &PointToPointEvaluator{
-						Corresponder: NewNearestPointCorresponder(kdt, 2),
-						MinPairs:     3,
-					},
-				}
+		delta := delta
+		t.Run(name, func(t *testing.T) {
+			target := pc.Vec3Slice{
+				delta.Transform(base[0]),
+				delta.Transform(base[1]),
+				delta.Transform(base[2]),
+				delta.Transform(base[3]),
+				delta.Transform(base[4]),
+			}
+			kdt := kdtree.New(base)
+			ppicp := &PointToPointICPGradient{
+				Evaluator: &PointToPointEvaluator{
+					Corresponder: NewNearestPointCorresponder(kdt, 2),
+					MinPairs:     3,
+				},
+			}
 
-				trans, err := ppicp.Fit(target)
-				if err != nil {
-					t.Fatal(err)
-				}
-				residual := trans.Transform(delta).Norm()
-				if !(0.025 >= residual) { // checking NaN
-					t.Errorf("Expected transform:\n%v\nGot:\n%v\n(residual: %f)", expectedTrans, trans, residual)
-				}
-			},
-		)
+			trans, err := ppicp.Fit(target)
+			if err != nil {
+				t.Fatal(err)
+			}
+			residual := trans.Mul(delta).Transform(mat.Vec3{1, 0, 0}).
+				Sub(mat.Vec3{1, 0, 0}).Norm()
+			if !(0.05 >= residual) { // checking NaN
+				t.Errorf("Expected transform:\n%v\nGot:\n%v\n(residual: %f)", delta.Inv(), trans, residual)
+			}
+		})
 	}
 }

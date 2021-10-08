@@ -2,6 +2,7 @@ package icp
 
 import (
 	"errors"
+	"math"
 
 	"github.com/seqsense/pcgol/mat"
 	"github.com/seqsense/pcgol/pc"
@@ -71,6 +72,10 @@ const (
 	dWz
 )
 
+func isNaN(v float32) bool {
+	return math.IsNaN(float64(v))
+}
+
 func (e *PointToPointEvaluator) Evaluate(target pc.Vec3RandomAccessor) (*Evaluated, error) {
 	minPairs := e.MinPairs
 	if minPairs == 0 {
@@ -81,6 +86,7 @@ func (e *PointToPointEvaluator) Evaluate(target pc.Vec3RandomAccessor) (*Evaluat
 		return nil, ErrNotEnoughPairs
 	}
 	out := &Evaluated{}
+	var num int
 	for _, pair := range pairs {
 		pb := e.Corresponder.Vec3At(pair.BaseID)
 		pt := target.Vec3At(pair.TargetID)
@@ -90,10 +96,27 @@ func (e *PointToPointEvaluator) Evaluate(target pc.Vec3RandomAccessor) (*Evaluat
 		out.Gradient[0] += 2 * (x0 - x1)
 		out.Gradient[1] += 2 * (y0 - y1)
 		out.Gradient[2] += 2 * (z0 - z1)
-		out.Gradient[3] += (2*y0*z1 - 2*y1*z0) / (2*z0*z0 + 2*y0*y0 - 1)
-		out.Gradient[4] += -(2*x0*z1 - 2*x1*z0) / (2*z0*z0 + 2*x0*x0 - 1)
-		out.Gradient[5] += (2*x0*y1 - 2*x1*y0) / (2*y0*y0 + 2*x0*x0 - 1)
+		xd := 2 * (y0*z1 - y1*z0) / (z0*z0 + y0*y0 - 0.5)
+		yd := 2 * (z0*x1 - z1*x0) / (z0*z0 + x0*x0 - 0.5)
+		zd := 2 * (x0*y1 - x1*y0) / (y0*y0 + x0*x0 - 0.5)
+		if !isNaN(xd) && !isNaN(yd) && !isNaN(zd) {
+			out.Gradient[3] += xd
+			out.Gradient[4] += yd
+			out.Gradient[5] += zd
+			num++
+		}
 	}
-	out.Value /= float32(len(pairs))
+	f := 1 / float32(len(pairs))
+	out.Value *= f
+	for i := 0; i < 3; i++ {
+		out.Gradient[i] *= f
+	}
+	fn := 1 / float32(num)
+	if num == 0 {
+		fn = 0
+	}
+	for i := 3; i < 6; i++ {
+		out.Gradient[i] *= fn
+	}
 	return out, nil
 }
