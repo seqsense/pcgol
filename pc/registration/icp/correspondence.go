@@ -12,17 +12,20 @@ type PointToPointCorrespondence struct {
 }
 
 type PointToPointCorresponder interface {
+	pc.Vec3RandomAccessor
 	Pairs(target pc.Vec3RandomAccessor) []PointToPointCorrespondence
 }
 
 func NewNearestPointCorresponder(base storage.Search, maxDist float32) PointToPointCorresponder {
 	return &nearestPointCorresponder{
-		base:    base,
-		maxDist: maxDist,
+		Vec3RandomAccessor: base,
+		base:               base,
+		maxDist:            maxDist,
 	}
 }
 
 type nearestPointCorresponder struct {
+	pc.Vec3RandomAccessor
 	base    storage.Search
 	maxDist float32
 }
