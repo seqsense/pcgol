@@ -57,6 +57,7 @@ func TestKDtree(t *testing.T) {
 	kdt := New(it)
 
 	expectedTree := &KDTree{
+		Vec3RandomAccessor: it,
 		root: &node{
 			children: [2]*node{
 				&node{
@@ -79,7 +80,6 @@ func TestKDtree(t *testing.T) {
 			id:  3,
 			dim: 0,
 		},
-		ra: it,
 	}
 	if !reflect.DeepEqual(expectedTree.root, kdt.root) {
 		t.Fatalf("Expected:\n%s\nGot:\n%s", expectedTree.root, kdt.root)
