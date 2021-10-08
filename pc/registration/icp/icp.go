@@ -1,16 +1,25 @@
 package icp
 
 import (
+	"errors"
+
 	"github.com/seqsense/pcgol/mat"
 	"github.com/seqsense/pcgol/pc"
 )
 
-type PointToPointICP struct {
-	Evaluator    *PointToPointEvaluator
+var (
+	ErrNeedGradient = errors.New("need gradient output of Evaluator")
+)
+
+type PointToPointICPGradient struct {
+	Evaluator    Evaluator
 	MaxIteration int
 }
 
-func (r *PointToPointICP) Fit(target pc.Vec3RandomAccessor) (mat.Mat4, error) {
+func (r *PointToPointICPGradient) Fit(target pc.Vec3RandomAccessor) (mat.Mat4, error) {
+	if !r.Evaluator.HasGradient() {
+		return mat.Mat4{}, ErrNeedGradient
+	}
 	targetTransformed := make(pc.Vec3Slice, target.Len())
 	for i := 0; i < target.Len(); i++ {
 		targetTransformed[i] = target.Vec3At(i)

@@ -8,7 +8,7 @@ import (
 	"github.com/seqsense/pcgol/pc/storage/kdtree"
 )
 
-func TestPointToPointICP(t *testing.T) {
+func TestPointToPointICPGradient(t *testing.T) {
 	base := pc.Vec3Slice{
 		mat.Vec3{0, 0, 0},
 		mat.Vec3{1, 1, 0},
@@ -24,7 +24,7 @@ func TestPointToPointICP(t *testing.T) {
 		base[4].Add(delta),
 	}
 	kdt := kdtree.New(base)
-	ppicp := &PointToPointICP{
+	ppicp := &PointToPointICPGradient{
 		Evaluator: &PointToPointEvaluator{
 			Corresponder: NewNearestPointCorresponder(kdt, 2),
 			MinPairs:     3,
