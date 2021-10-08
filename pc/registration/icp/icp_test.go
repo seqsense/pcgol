@@ -36,7 +36,7 @@ func TestPointToPointICP(t *testing.T) {
 		t.Fatal(err)
 	}
 	residual := trans.Transform(delta).Norm()
-	if residual < -0.01 || 0.01 < residual {
-		t.Errorf("Expected transform:\n%v\nGot:\n%v", expectedTrans, trans)
+	if 0.01 < residual {
+		t.Errorf("Expected transform:\n%v\nGot:\n%v\n(residual: %f)", expectedTrans, trans, residual)
 	}
 }

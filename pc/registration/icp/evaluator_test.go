@@ -40,13 +40,12 @@ func TestPointToPointEvaluator(t *testing.T) {
 	if ev.Value != expected.Value {
 		t.Errorf("Expected evaluated value: %f, got: %f", expected.Value, ev.Value)
 	}
-	const factor = -0.01
-	dR := mat.Mat4{
-		1, ev.Gradient[dWz] * factor, -ev.Gradient[dWy] * factor, 0,
-		-ev.Gradient[dWz] * factor, 1, ev.Gradient[dWx] * factor, 0,
-		ev.Gradient[dWy] * factor, -ev.Gradient[dWx] * factor, 1, 0,
-		0, 0, 0, 1,
-	}
+	const factor = -0.1
+	dR := rodriguesToRotation(mat.Vec3{
+		ev.Gradient[dWx] * factor,
+		ev.Gradient[dWy] * factor,
+		ev.Gradient[dWz] * factor,
+	})
 	dT := mat.Vec3{
 		ev.Gradient[dX] * factor,
 		ev.Gradient[dY] * factor,

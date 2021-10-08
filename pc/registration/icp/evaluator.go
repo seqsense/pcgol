@@ -51,8 +51,14 @@ type Evaluator interface {
 //   2*(-dWx*z0 +     y0 + dWz*x0 - y1 + dy)
 //   2*(     z0 + dWx*y0 - dWy*x0 - z1 + dz)
 //   2*y0*(     z0 + dWx*y0 - dWy*x0 - z1 + dz) - 2*z0*(-dWx*z0 +     y0 + dWz*x0 - y1 + dy)
+//     -> dWx = 2*y0*(z0 + dWx*y0 - z1) - 2*z0*(-dWx*z0 + y0 - y1)
+//     -> dWx = (2*y0*z1 - 2*y1*z0) / (2*z0*z0 + 2*y0*y0 - 1)
 //   2*z0*( dWy*z0 - dWz*y0 +     x0 - x1 + dx) - 2*x0*(     z0 + dWx*y0 - dWy*x0 - z1 + dz)
+//     -> dWy = 2*z0*(dWy*z0 + x0 - x1) - 2*x0*(z0 - dWy*x0 - z1)
+//     -> dWy = -(2*x0*z1 - 2*x1*z0) / (2*z0*z0 + 2*x0*x0 - 1)
 //   2*x0*(-dWx*z0 +     y0 + dWz*x0 - y1 + dy) - 2*y0*( dWy*z0 - dWz*y0 +     x0 - x1 + dx)
+//     -> dWz = 2*x0*(y0 + dWz*x0 - y1) - 2*y0*(-dWz*y0 + x0 - x1)
+//     -> dWz = (2*x0*y1 - 2*x1*y0) / (2*y0*y0 + 2*x0*x0 - 1)
 // }
 type PointToPointEvaluator struct {
 	Corresponder PointToPointCorresponder
@@ -84,14 +90,15 @@ func (e *PointToPointEvaluator) Evaluate(target pc.Vec3RandomAccessor) (*Evaluat
 	for _, pair := range pairs {
 		pb := e.Corresponder.Vec3At(pair.BaseID)
 		pt := target.Vec3At(pair.TargetID)
-		diff := pt.Sub(pb)
+		x0, y0, z0 := pt[0], pt[1], pt[2]
+		x1, y1, z1 := pb[0], pb[1], pb[2]
 		out.Value += pair.SquaredDistance
-		out.Gradient[0] += 2 * (diff[0])
-		out.Gradient[1] += 2 * (diff[1])
-		out.Gradient[2] += 2 * (diff[2])
-		out.Gradient[3] += 2*pt[1]*(diff[2]) - 2*pt[2]*(diff[1])
-		out.Gradient[4] += 2*pt[2]*(diff[0]) - 2*pt[0]*(diff[2])
-		out.Gradient[5] += 2*pt[0]*(diff[1]) - 2*pt[1]*(diff[0])
+		out.Gradient[0] += 2 * (x0 - x1)
+		out.Gradient[1] += 2 * (y0 - y1)
+		out.Gradient[2] += 2 * (z0 - z1)
+		out.Gradient[3] += (2*y0*z1 - 2*y1*z0) / (2*z0*z0 + 2*y0*y0 - 1)
+		out.Gradient[4] += -(2*x0*z1 - 2*x1*z0) / (2*z0*z0 + 2*x0*x0 - 1)
+		out.Gradient[5] += (2*x0*y1 - 2*x1*y0) / (2*y0*y0 + 2*x0*x0 - 1)
 	}
 	out.Value /= float32(len(pairs))
 	return out, nil
