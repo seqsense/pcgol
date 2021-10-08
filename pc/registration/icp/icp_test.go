@@ -25,7 +25,7 @@ func TestPointToPointICPGradient(t *testing.T) {
 	} {
 		t.Run(fmt.Sprintf("(%0.3f,%0.3f,%0.3f)", delta[0], delta[1], delta[2]),
 			func(t *testing.T) {
-				expectedTrans := mat.Translate(delta[0], delta[1], delta[2])
+				expectedTrans := mat.Translate(-delta[0], -delta[1], -delta[2])
 				target := pc.Vec3Slice{
 					base[2].Add(delta),
 					base[3].Add(delta),
@@ -44,9 +44,10 @@ func TestPointToPointICPGradient(t *testing.T) {
 					t.Fatal(err)
 				}
 				residual := trans.Transform(delta).Norm()
-				if 0.01 < residual {
+				if !(0.025 >= residual) { // checking NaN
 					t.Errorf("Expected transform:\n%v\nGot:\n%v\n(residual: %f)", expectedTrans, trans, residual)
 				}
-			})
+			},
+		)
 	}
 }

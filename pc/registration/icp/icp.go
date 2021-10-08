@@ -34,7 +34,7 @@ func (r *PointToPointICPGradient) Fit(target pc.Vec3RandomAccessor) (mat.Mat4, e
 		if err != nil {
 			return trans, err
 		}
-		factor := -(1 - (float32(maxIteration) / float32(i)))
+		factor := -0.1 * (1 - (float32(i) / float32(maxIteration)))
 		deltaTrans := mat.Translate(
 			factor*ev.Gradient[dX],
 			factor*ev.Gradient[dY],
