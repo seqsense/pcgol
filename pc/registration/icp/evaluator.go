@@ -39,7 +39,7 @@ type Evaluator interface {
 //      1 -dWz  dWy
 //    dWz    1 -dWx
 //   -dWy  dWx    1
-// }
+// } // Primary term of Rodrigues' rotation around zero
 // dT: {
 //   dx
 //   dy
