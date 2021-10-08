@@ -43,7 +43,6 @@ func TestKDtree(t *testing.T) {
 	it.SetVec3(mat.Vec3{1, 0, 0}) // 5
 	it.Incr()
 	it.SetVec3(mat.Vec3{6, 2, 1}) // 6
-	it.Incr()
 	//      3
 	//     / \
 	//    /   \
