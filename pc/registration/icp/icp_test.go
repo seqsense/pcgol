@@ -1,6 +1,7 @@
 package icp
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/seqsense/pcgol/mat"
@@ -16,27 +17,36 @@ func TestPointToPointICPGradient(t *testing.T) {
 		mat.Vec3{3, 1, 1},
 		mat.Vec3{4, 0, 0},
 	}
-	delta := mat.Vec3{0.25, 0.125, -0.125}
-	expectedTrans := mat.Translate(delta[0], delta[1], delta[2])
-	target := pc.Vec3Slice{
-		base[2].Add(delta),
-		base[3].Add(delta),
-		base[4].Add(delta),
-	}
-	kdt := kdtree.New(base)
-	ppicp := &PointToPointICPGradient{
-		Evaluator: &PointToPointEvaluator{
-			Corresponder: NewNearestPointCorresponder(kdt, 2),
-			MinPairs:     3,
-		},
-	}
+	for _, delta := range []mat.Vec3{
+		{0, 0, 0},
+		{0.25, 0.125, -0.125},
+		{0.5, 0.5, 1.0},
+		{-0.5, -0.5, 1.0},
+	} {
+		t.Run(fmt.Sprintf("(%0.3f,%0.3f,%0.3f)", delta[0], delta[1], delta[2]),
+			func(t *testing.T) {
+				expectedTrans := mat.Translate(delta[0], delta[1], delta[2])
+				target := pc.Vec3Slice{
+					base[2].Add(delta),
+					base[3].Add(delta),
+					base[4].Add(delta),
+				}
+				kdt := kdtree.New(base)
+				ppicp := &PointToPointICPGradient{
+					Evaluator: &PointToPointEvaluator{
+						Corresponder: NewNearestPointCorresponder(kdt, 2),
+						MinPairs:     3,
+					},
+				}
 
-	trans, err := ppicp.Fit(target)
-	if err != nil {
-		t.Fatal(err)
-	}
-	residual := trans.Transform(delta).Norm()
-	if 0.01 < residual {
-		t.Errorf("Expected transform:\n%v\nGot:\n%v\n(residual: %f)", expectedTrans, trans, residual)
+				trans, err := ppicp.Fit(target)
+				if err != nil {
+					t.Fatal(err)
+				}
+				residual := trans.Transform(delta).Norm()
+				if 0.01 < residual {
+					t.Errorf("Expected transform:\n%v\nGot:\n%v\n(residual: %f)", expectedTrans, trans, residual)
+				}
+			})
 	}
 }
