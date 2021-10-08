@@ -17,10 +17,6 @@ func (i *binaryIterator) Incr() {
 	i.pos += i.stride
 }
 
-func (i *binaryIterator) IsValid() bool {
-	return i.pos+i.stride <= len(i.data)
-}
-
 func (i *binaryIterator) Len() int {
 	return len(i.data) / i.stride
 }
@@ -67,6 +63,10 @@ func (i *binaryFloat32Iterator) SetFloat32(v float32) {
 	)
 }
 
+func (i *binaryFloat32Iterator) IsValid() bool {
+	return i.pos+4 <= len(i.data)
+}
+
 type float32Iterator struct {
 	data   []float32
 	pos    int
@@ -78,7 +78,7 @@ func (i *float32Iterator) Incr() {
 }
 
 func (i *float32Iterator) IsValid() bool {
-	return i.pos+i.stride <= len(i.data)
+	return i.pos+1 <= len(i.data)
 }
 
 func (i *float32Iterator) Len() int {
@@ -170,4 +170,8 @@ func (i *binaryUint32Iterator) SetUint32(v uint32) {
 	binary.LittleEndian.PutUint32(
 		i.binaryIterator.data[i.binaryIterator.pos:i.binaryIterator.pos+4], v,
 	)
+}
+
+func (i *binaryUint32Iterator) IsValid() bool {
+	return i.pos+4 <= len(i.data)
 }
