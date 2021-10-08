@@ -47,18 +47,12 @@ type Evaluator interface {
 // }
 // f(pt) = ((dR*pt + dT) - pb).NormSq()
 // grad f(pt) = {
-//   2*( dWy*z0 - dWz*y0 +     x0 - x1 + dx)
-//   2*(-dWx*z0 +     y0 + dWz*x0 - y1 + dy)
-//   2*(     z0 + dWx*y0 - dWy*x0 - z1 + dz)
-//   2*y0*(     z0 + dWx*y0 - dWy*x0 - z1 + dz) - 2*z0*(-dWx*z0 +     y0 + dWz*x0 - y1 + dy)
-//     -> dWx = 2*y0*(z0 + dWx*y0 - z1) - 2*z0*(-dWx*z0 + y0 - y1)
-//     -> dWx = (2*y0*z1 - 2*y1*z0) / (2*z0*z0 + 2*y0*y0 - 1)
-//   2*z0*( dWy*z0 - dWz*y0 +     x0 - x1 + dx) - 2*x0*(     z0 + dWx*y0 - dWy*x0 - z1 + dz)
-//     -> dWy = 2*z0*(dWy*z0 + x0 - x1) - 2*x0*(z0 - dWy*x0 - z1)
-//     -> dWy = -(2*x0*z1 - 2*x1*z0) / (2*z0*z0 + 2*x0*x0 - 1)
-//   2*x0*(-dWx*z0 +     y0 + dWz*x0 - y1 + dy) - 2*y0*( dWy*z0 - dWz*y0 +     x0 - x1 + dx)
-//     -> dWz = 2*x0*(y0 + dWz*x0 - y1) - 2*y0*(-dWz*y0 + x0 - x1)
-//     -> dWz = (2*x0*y1 - 2*x1*y0) / (2*y0*y0 + 2*x0*x0 - 1)
+//   2*(x0 - x1)
+//   2*(y0 - y1)
+//   2*(z0 - z1)
+//   (2*y0*z1 - 2*y1*z0) / (2*z0*z0 + 2*y0*y0 - 1)
+//   -(2*x0*z1 - 2*x1*z0) / (2*z0*z0 + 2*x0*x0 - 1)
+//   (2*x0*y1 - 2*x1*y0) / (2*y0*y0 + 2*x0*x0 - 1)
 // }
 type PointToPointEvaluator struct {
 	Corresponder PointToPointCorresponder
