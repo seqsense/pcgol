@@ -27,7 +27,7 @@ func TestNearestPointCorresponder(t *testing.T) {
 	}
 	pairs := corr.Pairs(targets)
 
-	expected := []Correspondance{
+	expected := []Correspondence{
 		{2, 0, 0},
 		{1, 2, 1},
 	}
