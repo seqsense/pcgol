@@ -128,10 +128,10 @@ func newNode(ra pc.Vec3RandomAccessor, indice []int, depth int) *node {
 
 	var left, right *node
 	if mid > 0 {
-		left = newNode(ra, indice[0:mid], depth+1)
+		left = newNode(ra, indice[:mid], depth+1)
 	}
 	if mid+1 < len(indice) {
-		right = newNode(ra, indice[mid+1:len(indice)], depth+1)
+		right = newNode(ra, indice[mid+1:], depth+1)
 	}
 	return &node{
 		children: [2]*node{left, right},
