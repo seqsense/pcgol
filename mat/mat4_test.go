@@ -1,6 +1,7 @@
 package mat
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 )
@@ -158,4 +159,16 @@ func TestMat4_Transpose(t *testing.T) {
 	if !reflect.DeepEqual(expected, trans) {
 		t.Errorf("Expected %v, got %v", expected, trans)
 	}
+}
+
+func ExampleMat4_String() {
+	m := Mat4{
+		1, 2, 3, 4,
+		5, 6, 7, 8,
+		9, 10, 11, 12,
+		13, 14, 15, 16,
+	}
+	fmt.Println(m)
+	// Output:
+	// [[1.000 2.000 3.000 4.000] [5.000 6.000 7.000 8.000] [9.000 10.000 11.000 12.000] [13.000 14.000 15.000 16.000]]
 }

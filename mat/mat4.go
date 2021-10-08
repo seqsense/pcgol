@@ -2,6 +2,7 @@ package mat
 
 import (
 	"fmt"
+	"strings"
 )
 
 type Mat4 [16]float32
@@ -220,11 +221,11 @@ func (m Mat4) Transpose() Mat4 {
 }
 
 func (m Mat4) String() string {
-	var out string
+	out := make([]string, 4)
 	for j := 0; j < 4; j++ {
-		out += fmt.Sprintf("[%0.3f %0.3f %0.3f %0.3f]",
+		out[j] = fmt.Sprintf("[%0.3f %0.3f %0.3f %0.3f]",
 			m[j*4+0], m[j*4+1], m[j*4+2], m[j*4+3],
 		)
 	}
-	return "[" + out + "]"
+	return "[" + strings.Join(out, " ") + "]"
 }
