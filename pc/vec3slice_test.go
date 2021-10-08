@@ -1,14 +1,13 @@
-package testutil
+package pc
 
 import (
 	"testing"
 
 	"github.com/seqsense/pcgol/mat"
-	"github.com/seqsense/pcgol/pc"
 )
 
-func TestVec3Array(t *testing.T) {
-	var a pc.Vec3RandomAccessor = Vec3Array{
+func TestVec3Slice(t *testing.T) {
+	var a Vec3RandomAccessor = Vec3Slice{
 		mat.Vec3{1, 2, 3},
 		mat.Vec3{4, 5, 6},
 	}
