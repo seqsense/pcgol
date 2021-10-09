@@ -42,7 +42,7 @@ jobs:
     env:
       GOOS: js
       GOARCH: wasm
-      GO_VERSION: 1.16.9
+      GO_VERSION: 1.16.8
     steps:
       - name: Checkout
         uses: actions/checkout@v2
