@@ -43,26 +43,3 @@ func TestMinMaxVec3(t *testing.T) {
 		t.Errorf("Expected max: %v, got: %v", expectedMax, max)
 	}
 }
-
-func TestMinMaxRandomAccessor(t *testing.T) {
-	pp := Vec3Slice{
-		mat.Vec3{10.1, -20.2, 3.3},
-		mat.Vec3{1.1, 2.2, 4.3},
-		mat.Vec3{15.1, 21.2, 0.3},
-	}
-
-	expectedMin := mat.Vec3{1.1, -20.2, 0.3}
-	expectedMax := mat.Vec3{15.1, 21.2, 4.3}
-
-	min, max, err := MinMaxVec3RandomAccessor(pp)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if !expectedMin.Equal(min) {
-		t.Errorf("Expected min: %v, got: %v", expectedMin, min)
-	}
-	if !expectedMax.Equal(max) {
-		t.Errorf("Expected max: %v, got: %v", expectedMax, max)
-	}
-}

@@ -30,7 +30,7 @@ func TestPointToPointICPGradient(t *testing.T) {
 	} {
 		base := base
 		if debugPlot {
-			vMin, vMax, err := pc.MinMaxVec3RandomAccessor(base)
+			vMin, vMax, err := pc.MinMaxVec3(base)
 			if err != nil {
 				t.Fatal(err)
 			}
