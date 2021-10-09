@@ -32,6 +32,44 @@ jobs:
         uses: codecov/codecov-action@v2
         with:
           file: ./cover.out
+  test-wasm:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    env:
+      GOOS: js
+      GOARCH: wasm
+      GO_VERSION: 1.16.8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - name: Get go_js_wasm_exec
+        run: |
+          mkdir -p ${HOME}/.local/bin
+          wget https://raw.githubusercontent.com/golang/go/go${{ env.GO_VERSION }}/misc/wasm/go_js_wasm_exec \
+            -O ${HOME}/.local/bin/go_js_wasm_exec
+          wget https://raw.githubusercontent.com/golang/go/go${{ env.GO_VERSION }}/misc/wasm/wasm_exec.js \
+            -O ${HOME}/.local/bin/wasm_exec.js
+          chmod +x ${HOME}/.local/bin/go_js_wasm_exec
+      - name: Run go test
+        run: |
+          go vet ./...
+          go build ./...
+          go test ./... \
+            -v \
+            -exec=${HOME}/.local/bin/go_js_wasm_exec \
+            -coverprofile=cover.out -covermode atomic -coverpkg ./...
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v2
+        with:
+          file: ./cover.out
   tidy:
     runs-on: ubuntu-latest
     steps:
