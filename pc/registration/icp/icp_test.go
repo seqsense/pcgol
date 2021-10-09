@@ -16,8 +16,16 @@ func TestPointToPointICPGradient(t *testing.T) {
 		mat.Vec3{1, 1, 1},
 		mat.Vec3{2, 0, 0},
 	}
+	base1 := pc.Vec3Slice{
+		mat.Vec3{-2, 0, 3},
+		mat.Vec3{-1, 1, 3},
+		mat.Vec3{0, 2, 3},
+		mat.Vec3{1, 1, 4},
+		mat.Vec3{2, 0, 3},
+	}
 	for name, base := range map[string]pc.Vec3RandomAccessor{
 		"CloseOrigin": base0,
+		"FarOrigin":   base1,
 	} {
 		base := base
 		t.Run(name, func(t *testing.T) {
