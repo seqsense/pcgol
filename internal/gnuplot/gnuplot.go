@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/seqsense/pcgol/pc"
 )
@@ -14,6 +15,7 @@ import (
 type Gnuplot struct {
 	cmd *exec.Cmd
 	w   io.WriteCloser
+	wg  sync.WaitGroup
 }
 
 func Must(g *Gnuplot, err error) *Gnuplot {
@@ -42,19 +44,23 @@ func NewWithCommand(args ...string) (*Gnuplot, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	g := &Gnuplot{
+		cmd: cmd,
+		w:   w,
+	}
+	g.wg.Add(2)
 	go func() {
 		io.Copy(os.Stdout, cout)
+		g.wg.Done()
 	}()
 	go func() {
 		io.Copy(os.Stderr, cerr)
+		g.wg.Done()
 	}()
 
 	if err := cmd.Start(); err != nil {
 		return nil, err
-	}
-	g := &Gnuplot{
-		cmd: cmd,
-		w:   w,
 	}
 	g.Write("set grid")
 	g.Write("set size ratio -1")
@@ -82,6 +88,7 @@ func (g *Gnuplot) Splot(pp ...Plot) {
 func (g *Gnuplot) Close() {
 	g.w.Close()
 	g.cmd.Wait()
+	g.wg.Wait()
 }
 
 type Plot interface {
