@@ -1,5 +1,5 @@
-//go:build hasSed
-// +build hasSed
+//go:build hasSed && !js
+// +build hasSed,!js
 
 package gnuplot
 
