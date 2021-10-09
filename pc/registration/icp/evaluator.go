@@ -3,10 +3,13 @@ package icp
 import (
 	"errors"
 	"math"
+	"time"
 
 	"github.com/seqsense/pcgol/mat"
 	"github.com/seqsense/pcgol/pc"
 	"github.com/seqsense/pcgol/pc/storage"
+
+	"github.com/seqsense/pcgol/internal/gnuplot"
 )
 
 var (
@@ -88,9 +91,17 @@ func (e *PointToPointEvaluator) Evaluate(base storage.Search, target pc.Vec3Rand
 	}
 	out := &Evaluated{}
 	var num int
-	for _, pair := range pairs {
+
+	pairVecs := [2]pc.Vec3RandomAccessor{
+		make(pc.Vec3Slice, len(pairs)),
+		make(pc.Vec3Slice, len(pairs)),
+	}
+	for i, pair := range pairs {
 		pb := base.Vec3At(pair.BaseID)
 		pt := target.Vec3At(pair.TargetID)
+		pairVecs[0].(pc.Vec3Slice)[i] = pb
+		pairVecs[1].(pc.Vec3Slice)[i] = pt
+
 		x0, y0, z0 := pt[0], pt[1], pt[2]
 		x1, y1, z1 := pb[0], pb[1], pb[2]
 		out.Value += pair.SquaredDistance
@@ -107,6 +118,16 @@ func (e *PointToPointEvaluator) Evaluate(base storage.Search, target pc.Vec3Rand
 			num++
 		}
 	}
+
+	if debugPlot {
+		g.Splot(
+			&gnuplot.PointsPlot{Points: base},
+			&gnuplot.PointsPlot{Points: target},
+			&gnuplot.PointPairsPlot{Points: pairVecs},
+		)
+		time.Sleep(debugPlotInterval)
+	}
+
 	f := 1 / float32(len(pairs))
 	out.Value *= f
 	for i := 0; i < 3; i++ {

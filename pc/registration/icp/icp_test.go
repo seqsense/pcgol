@@ -1,6 +1,7 @@
 package icp
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/seqsense/pcgol/mat"
@@ -17,17 +18,26 @@ func TestPointToPointICPGradient(t *testing.T) {
 		mat.Vec3{2, 0, 0},
 	}
 	base1 := pc.Vec3Slice{
-		mat.Vec3{-2, 0, 3},
-		mat.Vec3{-1, 1, 3},
-		mat.Vec3{0, 2, 3},
-		mat.Vec3{1, 1, 4},
-		mat.Vec3{2, 0, 3},
+		mat.Vec3{-2, 0, 5},
+		mat.Vec3{-1, 1, 5},
+		mat.Vec3{0, 2, 5},
+		mat.Vec3{1, 1, 6},
+		mat.Vec3{2, 0, 5},
 	}
 	for name, base := range map[string]pc.Vec3RandomAccessor{
 		"CloseOrigin": base0,
 		"FarOrigin":   base1,
 	} {
 		base := base
+		if debugPlot {
+			vMin, vMax, err := pc.MinMaxVec3RandomAccessor(base)
+			if err != nil {
+				t.Fatal(err)
+			}
+			g.Write(fmt.Sprintf("set xrange [%f:%f]", vMin[0]-1, vMax[0]+1))
+			g.Write(fmt.Sprintf("set yrange [%f:%f]", vMin[1]-1, vMax[1]+1))
+			g.Write(fmt.Sprintf("set zrange [%f:%f]", vMin[2]-1, vMax[2]+1))
+		}
 		t.Run(name, func(t *testing.T) {
 			for name, delta := range map[string]mat.Mat4{
 				"Trans(0,0,0)":                  mat.Translate(0, 0, 0),
