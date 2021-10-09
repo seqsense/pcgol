@@ -6,6 +6,8 @@ import (
 	"github.com/seqsense/pcgol/mat"
 )
 
+// rodriguesToRotation returns rotation matrix of
+// given rotation vector of Rodrigues' rotation formula.
 func rodriguesToRotation(v mat.Vec3) mat.Mat4 {
 	ang := v.Norm()
 	r := mat.Mat4{
