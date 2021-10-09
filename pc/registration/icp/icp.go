@@ -25,9 +25,9 @@ type PointToPointICPGradient struct {
 	GradientThreshold mat.Vec6
 }
 
-func (r *PointToPointICPGradient) Fit(base storage.Search, target pc.Vec3RandomAccessor) (mat.Mat4, error) {
+func (r *PointToPointICPGradient) Fit(base storage.Search, target pc.Vec3RandomAccessor) (mat.Mat4, Stat, error) {
 	if !r.Evaluator.HasGradient() {
-		return mat.Mat4{}, ErrNeedGradient
+		return mat.Mat4{}, Stat{}, ErrNeedGradient
 	}
 	targetTransformed := make(pc.Vec3Slice, target.Len())
 	for i := 0; i < target.Len(); i++ {
@@ -55,11 +55,14 @@ func (r *PointToPointICPGradient) Fit(base storage.Search, target pc.Vec3RandomA
 		gradThresh = DefaultGradientThreshold
 	}
 
+	var stat Stat
 	trans := mat.Translate(0, 0, 0)
 	for i := 0; i < maxIteration; i++ {
 		ev, err := r.Evaluator.Evaluate(base, targetTransformed)
+		stat.Evaluated = *ev
+		stat.NumIteration++
 		if err != nil {
-			return trans, err
+			return trans, stat, err
 		}
 
 		flat := true
@@ -89,5 +92,5 @@ func (r *PointToPointICPGradient) Fit(base storage.Search, target pc.Vec3RandomA
 			targetTransformed[i] = trans.Transform(target.Vec3At(i))
 		}
 	}
-	return trans, nil
+	return trans, stat, nil
 }

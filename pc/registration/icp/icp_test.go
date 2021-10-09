@@ -73,9 +73,9 @@ func TestPointToPointICPGradient(t *testing.T) {
 						},
 					}
 
-					trans, err := ppicp.Fit(kdt, target)
+					trans, stat, err := ppicp.Fit(kdt, target)
 					if err != nil {
-						t.Fatal(err)
+						t.Fatalf("Registration failed: %v, stat: %v", err, stat)
 					}
 					transformed := make(pc.Vec3Slice, len(indices))
 					for i := range target {
