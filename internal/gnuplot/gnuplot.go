@@ -3,6 +3,7 @@ package gnuplot
 import (
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -12,7 +13,7 @@ import (
 
 type Gnuplot struct {
 	cmd *exec.Cmd
-	w   io.Writer
+	w   io.WriteCloser
 }
 
 func Must(g *Gnuplot, err error) *Gnuplot {
@@ -23,11 +24,31 @@ func Must(g *Gnuplot, err error) *Gnuplot {
 }
 
 func New() (*Gnuplot, error) {
-	cmd := exec.Command("gnuplot", "-p")
+	return NewWithCommand("gnuplot", "-p")
+}
+
+func NewWithCommand(args ...string) (*Gnuplot, error) {
+	cmd := exec.Command(args[0], args[1:]...)
 	w, err := cmd.StdinPipe()
 	if err != nil {
 		return nil, err
 	}
+
+	cout, err := cmd.StdoutPipe()
+	if err != nil {
+		return nil, err
+	}
+	cerr, err := cmd.StderrPipe()
+	if err != nil {
+		return nil, err
+	}
+	go func() {
+		io.Copy(os.Stdout, cout)
+	}()
+	go func() {
+		io.Copy(os.Stderr, cerr)
+	}()
+
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}
@@ -58,6 +79,11 @@ func (g *Gnuplot) Splot(pp ...Plot) {
 	}
 }
 
+func (g *Gnuplot) Close() {
+	g.w.Close()
+	g.cmd.Wait()
+}
+
 type Plot interface {
 	Args() string
 	WriteData(w io.Writer)
@@ -81,7 +107,7 @@ func (p *PointsPlot) Args() string {
 		dims[i] = strconv.Itoa(d)
 	}
 	return fmt.Sprintf(
-		`"-" u %s %s`,
+		`"-" u %s %s nohidden3d`,
 		strings.Join(dims, ":"), p.Options,
 	)
 }
