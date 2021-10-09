@@ -30,11 +30,11 @@ func New(leafSize mat.Vec3) filter.Filter {
 }
 
 func (f *voxelGrid) Filter(pp *pc.PointCloud) (*pc.PointCloud, error) {
-	min, max, err := pc.MinMaxVec3(pp)
+	it, err := pp.Vec3Iterator()
 	if err != nil {
 		return nil, err
 	}
-	it, err := pp.Vec3Iterator()
+	min, max, err := pc.MinMaxVec3(it)
 	if err != nil {
 		return nil, err
 	}
