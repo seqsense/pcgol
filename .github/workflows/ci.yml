@@ -50,17 +50,18 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: '14'
-      - name: Get wasm_exec
+      - name: Get go_js_wasm_exec
         run: |
-          wget https://raw.githubusercontent.com/golang/go/master/misc/wasm/go_js_wasm_exec
-          chmod +x go_js_wasm_exec
+          wget https://raw.githubusercontent.com/golang/go/go1.17.1/misc/wasm/go_js_wasm_exec -O ${HOME}/.local/bin/go_js_wasm_exec
+          wget https://raw.githubusercontent.com/golang/go/go1.17.1/misc/wasm/wasm_exec.js -O ${HOME}/.local/bin/wasm_exec.js
+          chmod +x ${HOME}/.local/bin/go_js_wasm_exec
       - name: Run go test
         run: |
           go vet ./...
           go build ./...
           go test ./... \
             -v \
-            -exec=./go_js_wasm_exec \
+            -exec=${HOME}/.local/bin/go_js_wasm_exec \
             -coverprofile=cover.out -covermode atomic -coverpkg ./...
       - name: Upload coverage report
         uses: codecov/codecov-action@v2
