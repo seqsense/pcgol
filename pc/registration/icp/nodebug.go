@@ -10,4 +10,4 @@ import (
 const debugPlot = false
 const debugPlotInterval = 0
 
-var g *gnuplot.Gnuplot
+var g gnuplot.Gnuplot

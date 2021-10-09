@@ -11,7 +11,7 @@ import (
 const debugPlot = true
 const debugPlotInterval = 500 * time.Millisecond
 
-var g *gnuplot.Gnuplot
+var g gnuplot.Gnuplot
 
 func init() {
 	g = gnuplot.Must(gnuplot.New())
