@@ -53,7 +53,7 @@ func TestPointToPointICPGradient(t *testing.T) {
 				delta := delta
 				t.Run(name, func(t *testing.T) {
 					indices := []int{
-						0, 1, 2, 3, 4,
+						3, 1, 4, 0, 2,
 					}
 					target := make(pc.Vec3Slice, len(indices))
 					for i, id := range indices {
