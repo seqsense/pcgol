@@ -48,6 +48,50 @@ func TestMat4_Mul(t *testing.T) {
 	}
 }
 
+func TestMat4_Factor(t *testing.T) {
+	m := Mat4{
+		0, 1, 2, 3,
+		4, 5, 6, 7,
+		8, 9, 10, 11,
+		12, 13, 14, 15,
+	}
+	out := m.Factor(2)
+	expected := Mat4{
+		0, 2, 4, 6,
+		8, 10, 12, 14,
+		16, 18, 20, 22,
+		24, 26, 28, 30,
+	}
+	if !reflect.DeepEqual(expected, out) {
+		t.Errorf("Expected %v, got %v", expected, out)
+	}
+}
+
+func TestMat4_Add(t *testing.T) {
+	m0 := Mat4{
+		0, 1, 2, 3,
+		4, 5, 6, 7,
+		8, 9, 10, 11,
+		12, 13, 14, 15,
+	}
+	m1 := Mat4{
+		2, 4, 6, 8,
+		10, 12, 14, 16,
+		18, 20, 22, 24,
+		26, 28, 30, 32,
+	}
+	out := m0.Add(m1)
+	expected := Mat4{
+		2, 5, 8, 11,
+		14, 17, 20, 23,
+		26, 29, 32, 35,
+		38, 41, 44, 47,
+	}
+	if !reflect.DeepEqual(expected, out) {
+		t.Errorf("Expected %v, got %v", expected, out)
+	}
+}
+
 func TestMat4_InvAffine(t *testing.T) {
 	m0 := Translate(0.1, 0.2, 0.3)
 	m1 := Scale(1.1, 1.2, 1.3)

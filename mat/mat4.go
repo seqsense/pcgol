@@ -27,7 +27,7 @@ func (m Mat4) Mul(a Mat4) Mat4 {
 
 func (m Mat4) Factor(f float32) Mat4 {
 	var out Mat4
-	for i := 0; i < 16; i++ {
+	for i := range m {
 		out[i] = m[i] * f
 	}
 	return out
@@ -35,7 +35,7 @@ func (m Mat4) Factor(f float32) Mat4 {
 
 func (m Mat4) Add(a Mat4) Mat4 {
 	var out Mat4
-	for i := 0; i < 16; i++ {
+	for i := range m {
 		out[i] = m[i] + a[i]
 	}
 	return out
