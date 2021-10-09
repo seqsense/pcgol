@@ -12,29 +12,18 @@ type PointToPointCorrespondence struct {
 }
 
 type PointToPointCorresponder interface {
-	pc.Vec3RandomAccessor
-	Pairs(target pc.Vec3RandomAccessor) []PointToPointCorrespondence
+	Pairs(base storage.Search, target pc.Vec3RandomAccessor) []PointToPointCorrespondence
 }
 
-func NewNearestPointCorresponder(base storage.Search, maxDist float32) PointToPointCorresponder {
-	return &nearestPointCorresponder{
-		Vec3RandomAccessor: base,
-		base:               base,
-		maxDist:            maxDist,
-	}
+type NearestPointCorresponder struct {
+	MaxDist float32
 }
 
-type nearestPointCorresponder struct {
-	pc.Vec3RandomAccessor
-	base    storage.Search
-	maxDist float32
-}
-
-func (c *nearestPointCorresponder) Pairs(target pc.Vec3RandomAccessor) []PointToPointCorrespondence {
+func (c *NearestPointCorresponder) Pairs(base storage.Search, target pc.Vec3RandomAccessor) []PointToPointCorrespondence {
 	n := target.Len()
 	out := make([]PointToPointCorrespondence, 0, n)
 	for i := 0; i < n; i++ {
-		id, dsq := c.base.Nearest(target.Vec3At(i), c.maxDist)
+		id, dsq := base.Nearest(target.Vec3At(i), c.MaxDist)
 		if id < 0 {
 			continue
 		}

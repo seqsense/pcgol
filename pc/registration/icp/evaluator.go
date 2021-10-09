@@ -6,6 +6,7 @@ import (
 
 	"github.com/seqsense/pcgol/mat"
 	"github.com/seqsense/pcgol/pc"
+	"github.com/seqsense/pcgol/pc/storage"
 )
 
 var (
@@ -19,7 +20,7 @@ type Evaluated struct {
 }
 
 type Evaluator interface {
-	Evaluate(target pc.Vec3RandomAccessor) (*Evaluated, error)
+	Evaluate(base storage.Search, target pc.Vec3RandomAccessor) (*Evaluated, error)
 	HasGradient() bool
 	HasHessian() bool
 }
@@ -76,19 +77,19 @@ func isNaN(v float32) bool {
 	return math.IsNaN(float64(v))
 }
 
-func (e *PointToPointEvaluator) Evaluate(target pc.Vec3RandomAccessor) (*Evaluated, error) {
+func (e *PointToPointEvaluator) Evaluate(base storage.Search, target pc.Vec3RandomAccessor) (*Evaluated, error) {
 	minPairs := e.MinPairs
 	if minPairs == 0 {
 		minPairs = 6
 	}
-	pairs := e.Corresponder.Pairs(target)
+	pairs := e.Corresponder.Pairs(base, target)
 	if len(pairs) < minPairs {
 		return nil, ErrNotEnoughPairs
 	}
 	out := &Evaluated{}
 	var num int
 	for _, pair := range pairs {
-		pb := e.Corresponder.Vec3At(pair.BaseID)
+		pb := base.Vec3At(pair.BaseID)
 		pt := target.Vec3At(pair.TargetID)
 		x0, y0, z0 := pt[0], pt[1], pt[2]
 		x1, y1, z1 := pb[0], pb[1], pb[2]

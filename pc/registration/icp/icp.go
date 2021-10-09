@@ -5,6 +5,7 @@ import (
 
 	"github.com/seqsense/pcgol/mat"
 	"github.com/seqsense/pcgol/pc"
+	"github.com/seqsense/pcgol/pc/storage"
 )
 
 var (
@@ -16,7 +17,7 @@ type PointToPointICPGradient struct {
 	MaxIteration int
 }
 
-func (r *PointToPointICPGradient) Fit(target pc.Vec3RandomAccessor) (mat.Mat4, error) {
+func (r *PointToPointICPGradient) Fit(base storage.Search, target pc.Vec3RandomAccessor) (mat.Mat4, error) {
 	if !r.Evaluator.HasGradient() {
 		return mat.Mat4{}, ErrNeedGradient
 	}
@@ -32,7 +33,7 @@ func (r *PointToPointICPGradient) Fit(target pc.Vec3RandomAccessor) (mat.Mat4, e
 	tTrans := mat.Translate(0, 0, 0)
 	tRot := mat.Translate(0, 0, 0)
 	for i := 0; i < maxIteration; i++ {
-		ev, err := r.Evaluator.Evaluate(targetTransformed)
+		ev, err := r.Evaluator.Evaluate(base, targetTransformed)
 		if err != nil {
 			return trans, err
 		}

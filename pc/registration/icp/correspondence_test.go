@@ -18,14 +18,14 @@ func TestNearestPointCorresponder(t *testing.T) {
 		mat.Vec3{0, 1, 0},
 	}
 	kdt := kdtree.New(base)
-	corr := NewNearestPointCorresponder(kdt, 3)
+	corr := &NearestPointCorresponder{MaxDist: 3}
 
 	targets := pc.Vec3Slice{
 		mat.Vec3{8, 1, 1},  // nearest=2
 		mat.Vec3{-8, 1, 1}, // no corresponding point
 		mat.Vec3{2, 1, 0},  // nearest=1
 	}
-	pairs := corr.Pairs(targets)
+	pairs := corr.Pairs(kdt, targets)
 
 	expected := []PointToPointCorrespondence{
 		{2, 0, 0},

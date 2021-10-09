@@ -29,10 +29,10 @@ func TestPointToPointEvaluator(t *testing.T) {
 	kdt := kdtree.New(base)
 
 	e := &PointToPointEvaluator{
-		Corresponder: NewNearestPointCorresponder(kdt, 2),
+		Corresponder: &NearestPointCorresponder{MaxDist: 2},
 		MinPairs:     3,
 	}
-	ev, err := e.Evaluate(target)
+	ev, err := e.Evaluate(kdt, target)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -55,7 +55,7 @@ func TestPointToPointEvaluator(t *testing.T) {
 	for i, p := range target {
 		updatedTarget[i] = dR.Transform(p).Add(dT)
 	}
-	ev2, err := e.Evaluate(updatedTarget)
+	ev2, err := e.Evaluate(kdt, updatedTarget)
 	if err != nil {
 		t.Fatal(err)
 	}
