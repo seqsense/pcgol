@@ -49,6 +49,12 @@ func TestPointToPointICPGradient(t *testing.T) {
 				"Rot(1,0,0,-0.2)":               mat.Rotate(1, 0, 0, -0.2),
 				"Rot(1,0,0,0.1)Trans(0.2,0,0)":  mat.Rotate(1, 0, 0, 0.1).Mul(mat.Translate(0.2, 0, 0)),
 				"Rot(1,0,0,0.1)Trans(-0.2,0,0)": mat.Rotate(1, 0, 0, 0.1).Mul(mat.Translate(-0.2, 0, 0)),
+				"Trans(0.2,0,0)Rot(1,0,0,0.1)":  mat.Translate(0.2, 0, 0).Mul(mat.Rotate(1, 0, 0, 0.1)),
+				"Trans(-0.2,0,0)Rot(1,0,0,0.1)": mat.Translate(-0.2, 0, 0).Mul(mat.Rotate(1, 0, 0, 0.1)),
+				"Rot(0,1,0,0.1)Trans(0.2,0,0)":  mat.Rotate(0, 1, 0, 0.1).Mul(mat.Translate(0.2, 0, 0)),
+				"Rot(0,1,0,0.1)Trans(-0.2,0,0)": mat.Rotate(0, 1, 0, 0.1).Mul(mat.Translate(-0.2, 0, 0)),
+				"Trans(0.2,0,0)Rot(0,1,0,0.1)":  mat.Translate(0.2, 0, 0).Mul(mat.Rotate(0, 1, 0, 0.1)),
+				"Trans(-0.2,0,0)Rot(0,1,0,0.1)": mat.Translate(-0.2, 0, 0).Mul(mat.Rotate(0, 1, 0, 0.1)),
 			} {
 				delta := delta
 				t.Run(name, func(t *testing.T) {
