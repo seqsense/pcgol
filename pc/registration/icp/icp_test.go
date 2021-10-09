@@ -38,6 +38,7 @@ func TestPointToPointICPGradient(t *testing.T) {
 			g.Write(fmt.Sprintf("set yrange [%f:%f]", vMin[1]-1, vMax[1]+1))
 			g.Write(fmt.Sprintf("set zrange [%f:%f]", vMin[2]-1, vMax[2]+1))
 		}
+
 		t.Run(name, func(t *testing.T) {
 			for name, delta := range map[string]mat.Mat4{
 				"Trans(0,0,0)":                  mat.Translate(0, 0, 0),
@@ -51,12 +52,12 @@ func TestPointToPointICPGradient(t *testing.T) {
 			} {
 				delta := delta
 				t.Run(name, func(t *testing.T) {
-					target := pc.Vec3Slice{
-						delta.Transform(base.Vec3At(0)),
-						delta.Transform(base.Vec3At(1)),
-						delta.Transform(base.Vec3At(2)),
-						delta.Transform(base.Vec3At(3)),
-						delta.Transform(base.Vec3At(4)),
+					indices := []int{
+						0, 1, 2, 3, 4,
+					}
+					target := make(pc.Vec3Slice, len(indices))
+					for i, id := range indices {
+						target[i] = delta.Transform(base.Vec3At(id))
 					}
 					kdt := kdtree.New(base)
 					ppicp := &PointToPointICPGradient{
@@ -70,8 +71,15 @@ func TestPointToPointICPGradient(t *testing.T) {
 					if err != nil {
 						t.Fatal(err)
 					}
-					residual := trans.Mul(delta).Transform(mat.Vec3{1, 0, 0}).
-						Sub(mat.Vec3{1, 0, 0}).Norm()
+					transformed := make(pc.Vec3Slice, len(indices))
+					for i := range target {
+						transformed[i] = trans.Transform(target[i])
+					}
+					var residual float32
+					for i, id := range indices {
+						residual += transformed[i].Sub(base.Vec3At(id)).NormSq()
+					}
+					residual /= float32(len(indices))
 					if !(0.05 >= residual) { // checking NaN
 						t.Errorf("Expected transform:\n%v\nGot:\n%v\n(residual: %f)", delta.Inv(), trans, residual)
 					}

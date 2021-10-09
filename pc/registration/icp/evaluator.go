@@ -105,6 +105,7 @@ func (e *PointToPointEvaluator) Evaluate(base storage.Search, target pc.Vec3Rand
 		x0, y0, z0 := pt[0], pt[1], pt[2]
 		x1, y1, z1 := pb[0], pb[1], pb[2]
 		out.Value += pair.SquaredDistance
+
 		out.Gradient[0] += 2 * (x0 - x1)
 		out.Gradient[1] += 2 * (y0 - y1)
 		out.Gradient[2] += 2 * (z0 - z1)

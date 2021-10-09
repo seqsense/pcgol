@@ -2,10 +2,13 @@ package icp
 
 import (
 	"errors"
+	"time"
 
 	"github.com/seqsense/pcgol/mat"
 	"github.com/seqsense/pcgol/pc"
 	"github.com/seqsense/pcgol/pc/storage"
+
+	"github.com/seqsense/pcgol/internal/gnuplot"
 )
 
 var (
@@ -25,13 +28,20 @@ func (r *PointToPointICPGradient) Fit(base storage.Search, target pc.Vec3RandomA
 	for i := 0; i < target.Len(); i++ {
 		targetTransformed[i] = target.Vec3At(i)
 	}
+
+	if debugPlot {
+		g.Splot(
+			&gnuplot.PointsPlot{Points: base},
+			&gnuplot.PointsPlot{Points: target},
+		)
+		time.Sleep(debugPlotInterval)
+	}
+
 	maxIteration := r.MaxIteration
 	if maxIteration == 0 {
 		maxIteration = 20
 	}
 	trans := mat.Translate(0, 0, 0)
-	tTrans := mat.Translate(0, 0, 0)
-	tRot := mat.Translate(0, 0, 0)
 	for i := 0; i < maxIteration; i++ {
 		ev, err := r.Evaluator.Evaluate(base, targetTransformed)
 		if err != nil {
@@ -48,9 +58,7 @@ func (r *PointToPointICPGradient) Fit(base storage.Search, target pc.Vec3RandomA
 			factor * ev.Gradient[dWy],
 			factor * ev.Gradient[dWz],
 		})
-		tRot = deltaRot.Mul(tRot)
-		tTrans = deltaTrans.Mul(tTrans)
-		trans = tRot.Mul(tTrans)
+		trans = deltaRot.Mul(deltaTrans.Mul(trans))
 		for i := 0; i < target.Len(); i++ {
 			targetTransformed[i] = trans.Transform(target.Vec3At(i))
 		}
