@@ -4,6 +4,8 @@
 package gnuplot
 
 import (
+	"time"
+
 	"github.com/seqsense/pcgol/mat"
 	"github.com/seqsense/pcgol/pc"
 )
@@ -30,6 +32,7 @@ func ExampleGnuplot() {
 		&PointPairsPlot{Points: [2]pc.Vec3RandomAccessor{pp1, pp2}},
 	)
 
+	time.Sleep(100 * time.Millisecond)
 	g.Close()
 
 	// Output:
