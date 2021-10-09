@@ -16,11 +16,13 @@ var (
 )
 
 var DefaultGradientWeight = mat.Vec6{0.3, 0.3, 0.3, 0.3, 0.3, 0.3}
+var DefaultGradientThreshold = mat.Vec6{0.01, 0.01, 0.01, 0.01, 0.01, 0.01}
 
 type PointToPointICPGradient struct {
-	Evaluator      Evaluator
-	MaxIteration   int
-	GradientWeight mat.Vec6
+	Evaluator         Evaluator
+	MaxIteration      int
+	GradientWeight    mat.Vec6
+	GradientThreshold mat.Vec6
 }
 
 func (r *PointToPointICPGradient) Fit(base storage.Search, target pc.Vec3RandomAccessor) (mat.Mat4, error) {
@@ -48,12 +50,27 @@ func (r *PointToPointICPGradient) Fit(base storage.Search, target pc.Vec3RandomA
 	if weight.Equal(mat.Vec6{}) {
 		weight = DefaultGradientWeight
 	}
+	gradThresh := r.GradientThreshold
+	if gradThresh.Equal(mat.Vec6{}) {
+		gradThresh = DefaultGradientThreshold
+	}
 
 	trans := mat.Translate(0, 0, 0)
 	for i := 0; i < maxIteration; i++ {
 		ev, err := r.Evaluator.Evaluate(base, targetTransformed)
 		if err != nil {
 			return trans, err
+		}
+
+		flat := true
+		for j, g := range ev.Gradient {
+			if g < -gradThresh[j] || gradThresh[j] < g {
+				flat = false
+				break
+			}
+		}
+		if flat {
+			break
 		}
 
 		factorIter := -(1 - (float32(i) / float32(maxIteration)))
