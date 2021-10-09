@@ -31,12 +31,11 @@ type Float32Iterator interface {
 }
 
 type Vec3Iterator interface {
+	Vec3RandomAccessor
 	Incr()
 	IsValid() bool
 	Vec3() mat.Vec3
 	SetVec3(mat.Vec3)
-	Vec3At(int) mat.Vec3
-	Len() int
 }
 
 type binaryFloat32Iterator struct {

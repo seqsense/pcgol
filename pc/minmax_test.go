@@ -23,11 +23,15 @@ func TestMinMaxVec3(t *testing.T) {
 			15.1, 21.2, 0.3,
 		}),
 	}
+	it, err := pp.Vec3Iterator()
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	expectedMin := mat.Vec3{1.1, -20.2, 0.3}
 	expectedMax := mat.Vec3{15.1, 21.2, 4.3}
 
-	min, max, err := MinMaxVec3(&pp)
+	min, max, err := MinMaxVec3(it)
 	if err != nil {
 		t.Fatal(err)
 	}
