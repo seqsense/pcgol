@@ -53,7 +53,7 @@ jobs:
       - name: Get wasm_exec
         run: |
           wget https://raw.githubusercontent.com/golang/go/master/misc/wasm/go_js_wasm_exec
-          chmog +x go_js_wasm_exec
+          chmod +x go_js_wasm_exec
       - name: Run go test
         run: |
           go vet ./...
