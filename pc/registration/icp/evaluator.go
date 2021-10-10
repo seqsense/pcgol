@@ -56,7 +56,7 @@ type Evaluator interface {
 //   2*(y0 - y1)
 //   2*(z0 - z1)
 //   (2*y0*z1 - 2*y1*z0) / (2*z0*z0 + 2*y0*y0 - 1)
-//   -(2*x0*z1 - 2*x1*z0) / (2*z0*z0 + 2*x0*x0 - 1)
+//   (2*z0*x1 - 2*z1*x0) / (2*z0*z0 + 2*x0*x0 - 1)
 //   (2*x0*y1 - 2*x1*y0) / (2*y0*y0 + 2*x0*x0 - 1)
 // }
 type PointToPointEvaluator struct {
