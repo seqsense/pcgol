@@ -1,5 +1,10 @@
 package mat
 
+import (
+	"fmt"
+	"strings"
+)
+
 type Mat4 [16]float32
 
 func (m Mat4) Floats() [16]float32 {
@@ -16,6 +21,22 @@ func (m Mat4) Mul(a Mat4) Mat4 {
 			}
 			out[4*j+i] = sum
 		}
+	}
+	return out
+}
+
+func (m Mat4) Factor(f float32) Mat4 {
+	var out Mat4
+	for i := range m {
+		out[i] = m[i] * f
+	}
+	return out
+}
+
+func (m Mat4) Add(a Mat4) Mat4 {
+	var out Mat4
+	for i := range m {
+		out[i] = m[i] + a[i]
 	}
 	return out
 }
@@ -188,4 +209,23 @@ func (m Mat4) Inv() Mat4 {
 		out[i] *= dinv
 	}
 	return out
+}
+
+func (m Mat4) Transpose() Mat4 {
+	return Mat4{
+		m[4*0+0], m[4*1+0], m[4*2+0], m[4*3+0],
+		m[4*0+1], m[4*1+1], m[4*2+1], m[4*3+1],
+		m[4*0+2], m[4*1+2], m[4*2+2], m[4*3+2],
+		m[4*0+3], m[4*1+3], m[4*2+3], m[4*3+3],
+	}
+}
+
+func (m Mat4) String() string {
+	out := make([]string, 4)
+	for j := 0; j < 4; j++ {
+		out[j] = fmt.Sprintf("[%0.3f %0.3f %0.3f %0.3f]",
+			m[j*4+0], m[j*4+1], m[j*4+2], m[j*4+3],
+		)
+	}
+	return "[" + strings.Join(out, " ") + "]"
 }

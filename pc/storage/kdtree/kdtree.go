@@ -11,8 +11,8 @@ import (
 )
 
 type KDTree struct {
+	pc.Vec3RandomAccessor
 	root *node
-	ra   pc.Vec3RandomAccessor
 
 	poolNodeArray *sync.Pool
 }
@@ -31,8 +31,8 @@ func New(ra pc.Vec3RandomAccessor) *KDTree {
 	root := newNode(ra, ids, 0)
 	maxDepth := root.maxDepth(0)
 	return &KDTree{
-		root: root,
-		ra:   ra,
+		Vec3RandomAccessor: ra,
+		root:               root,
 
 		poolNodeArray: &sync.Pool{
 			New: func() interface{} {
@@ -58,12 +58,12 @@ func (k *KDTree) Nearest(p mat.Vec3, maxRange float32) (int, float32) {
 func (k *KDTree) nearestImpl(p mat.Vec3, nodes []*node, maxRangeSq float32) (int, float32) {
 	i := len(nodes) - 1
 	id := nodes[i].id
-	dsq := (k.ra.Vec3At(id).Sub(p)).NormSq()
+	dsq := (k.Vec3At(id).Sub(p)).NormSq()
 	if dsq > maxRangeSq {
 		id, dsq = -1, maxRangeSq
 	}
 	for j := i - 1; j >= 0; j-- {
-		pivot := k.ra.Vec3At(nodes[j].id)
+		pivot := k.Vec3At(nodes[j].id)
 		dim := nodes[j].dim
 		fromPivot := p[dim] - pivot[dim]
 		fromPivotSq := fromPivot * fromPivot
@@ -98,7 +98,7 @@ func (k *KDTree) nearestImpl(p mat.Vec3, nodes []*node, maxRangeSq float32) (int
 func (k *KDTree) searchLeafNode(p mat.Vec3, base []*node) []*node {
 	i := len(base) - 1
 	parent := base[i]
-	pivotVal, val := k.ra.Vec3At(parent.id)[parent.dim], p[parent.dim]
+	pivotVal, val := k.Vec3At(parent.id)[parent.dim], p[parent.dim]
 
 	child0, child1 := parent.children[0], parent.children[1]
 	switch {

@@ -34,3 +34,23 @@ func TestVec3_Cross(t *testing.T) {
 		t.Error("CrossNormSq is wrong")
 	}
 }
+
+func TestVec3_Equal(t *testing.T) {
+	t.Run("Equal", func(t *testing.T) {
+		a := Vec3{1, 2, 3}
+		b := Vec3{1, 2, 3}
+		if !a.Equal(b) {
+			t.Errorf("%v must be equal to %v", a, b)
+		}
+	})
+	t.Run("NotEqual", func(t *testing.T) {
+		a := Vec3{1, 2, 3}
+		for i := range a {
+			b := Vec3{1, 2, 3}
+			b[i] += 0.1
+			if a.Equal(b) {
+				t.Errorf("%v must not be equal to %v", a, b)
+			}
+		}
+	})
+}

@@ -1,6 +1,7 @@
 package mat
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 )
@@ -44,6 +45,50 @@ func TestMat4_Mul(t *testing.T) {
 				)
 			}
 		}
+	}
+}
+
+func TestMat4_Factor(t *testing.T) {
+	m := Mat4{
+		0, 1, 2, 3,
+		4, 5, 6, 7,
+		8, 9, 10, 11,
+		12, 13, 14, 15,
+	}
+	out := m.Factor(2)
+	expected := Mat4{
+		0, 2, 4, 6,
+		8, 10, 12, 14,
+		16, 18, 20, 22,
+		24, 26, 28, 30,
+	}
+	if !reflect.DeepEqual(expected, out) {
+		t.Errorf("Expected %v, got %v", expected, out)
+	}
+}
+
+func TestMat4_Add(t *testing.T) {
+	m0 := Mat4{
+		0, 1, 2, 3,
+		4, 5, 6, 7,
+		8, 9, 10, 11,
+		12, 13, 14, 15,
+	}
+	m1 := Mat4{
+		2, 4, 6, 8,
+		10, 12, 14, 16,
+		18, 20, 22, 24,
+		26, 28, 30, 32,
+	}
+	out := m0.Add(m1)
+	expected := Mat4{
+		2, 5, 8, 11,
+		14, 17, 20, 23,
+		26, 29, 32, 35,
+		38, 41, 44, 47,
+	}
+	if !reflect.DeepEqual(expected, out) {
+		t.Errorf("Expected %v, got %v", expected, out)
 	}
 }
 
@@ -139,4 +184,35 @@ func TestMat4_Inv(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestMat4_Transpose(t *testing.T) {
+	m := Mat4{
+		1, 2, 3, 4,
+		5, 6, 7, 8,
+		9, 10, 11, 12,
+		13, 14, 15, 16,
+	}
+	expected := Mat4{
+		1, 5, 9, 13,
+		2, 6, 10, 14,
+		3, 7, 11, 15,
+		4, 8, 12, 16,
+	}
+	trans := m.Transpose()
+	if !reflect.DeepEqual(expected, trans) {
+		t.Errorf("Expected %v, got %v", expected, trans)
+	}
+}
+
+func ExampleMat4_String() {
+	m := Mat4{
+		1, 2, 3, 4,
+		5, 6, 7, 8,
+		9, 10, 11, 12,
+		13, 14, 15, 16,
+	}
+	fmt.Println(m)
+	// Output:
+	// [[1.000 2.000 3.000 4.000] [5.000 6.000 7.000 8.000] [9.000 10.000 11.000 12.000] [13.000 14.000 15.000 16.000]]
 }
