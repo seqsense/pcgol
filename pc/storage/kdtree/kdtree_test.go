@@ -249,173 +249,169 @@ func TestKDtree(t *testing.T) {
 	t.Run("deleteNodeImpl", func(t *testing.T) {
 		it := createTestPointCloud(t)
 		var kdt *KDTree
-		testCases := map[string]struct {
-			p             mat.Vec3
-			expectedTree  *KDTree
-			createNewTree bool
+		testCases := map[string][]struct {
+			p            mat.Vec3
+			expectedTree *KDTree
 		}{
-			"leaf": {
-				p: mat.Vec3{1, 0, 0},
-				expectedTree: &KDTree{
-					Vec3RandomAccessor: it,
-					root: &node{
-						children: [2]*node{
-							&node{
-								children: [2]*node{
-									nil,
-									&node{id: 1, dim: 2},
+			"leaf then node with right sub tree": {
+				{
+					p: mat.Vec3{1, 0, 0},
+					expectedTree: &KDTree{
+						Vec3RandomAccessor: it,
+						root: &node{
+							children: [2]*node{
+								&node{
+									children: [2]*node{
+										nil,
+										&node{id: 1, dim: 2},
+									},
+									id:  4,
+									dim: 1,
 								},
-								id:  4,
-								dim: 1,
-							},
-							&node{
-								children: [2]*node{
-									&node{id: 2, dim: 2},
-									&node{id: 6, dim: 2},
+								&node{
+									children: [2]*node{
+										&node{id: 2, dim: 2},
+										&node{id: 6, dim: 2},
+									},
+									id:  0,
+									dim: 1,
 								},
-								id:  0,
-								dim: 1,
 							},
+							id:  3,
+							dim: 0,
 						},
-						id:  3,
-						dim: 0,
 					},
 				},
-				createNewTree: true,
+				{
+					p: mat.Vec3{0, 1, 0},
+					expectedTree: &KDTree{
+						Vec3RandomAccessor: it,
+						root: &node{
+							children: [2]*node{
+								&node{
+									id:  1,
+									dim: 1,
+								},
+								&node{
+									children: [2]*node{
+										&node{id: 2, dim: 2},
+										&node{id: 6, dim: 2},
+									},
+									id:  0,
+									dim: 1,
+								},
+							},
+							id:  3,
+							dim: 0,
+						},
+					},
+				},
 			},
-			"node with right sub tree": {
-				p: mat.Vec3{0, 1, 0},
-				expectedTree: &KDTree{
-					Vec3RandomAccessor: it,
-					root: &node{
-						children: [2]*node{
-							&node{
-								id:  1,
-								dim: 1,
-							},
-							&node{
-								children: [2]*node{
-									&node{id: 2, dim: 2},
-									&node{id: 6, dim: 2},
+			"root then node with left sub tree": {
+				{
+					p: mat.Vec3{3, 0, 0},
+					expectedTree: &KDTree{
+						Vec3RandomAccessor: it,
+						root: &node{
+							children: [2]*node{
+								&node{
+									children: [2]*node{
+										&node{
+											id:  5,
+											dim: 2,
+										},
+										&node{
+											id:  1,
+											dim: 2,
+										},
+									},
+									id:  4,
+									dim: 1,
 								},
-								id:  0,
-								dim: 1,
+								&node{
+									children: [2]*node{
+										&node{
+											id:  2,
+											dim: 2,
+										},
+									},
+									id:  6,
+									dim: 1,
+								},
 							},
+							id:  0,
+							dim: 0,
 						},
-						id:  3,
-						dim: 0,
 					},
 				},
-				createNewTree: false,
-			},
-			"root": {
-				p: mat.Vec3{3, 0, 0},
-				expectedTree: &KDTree{
-					Vec3RandomAccessor: it,
-					root: &node{
-						children: [2]*node{
-							&node{
-								children: [2]*node{
-									&node{
-										id:  5,
-										dim: 2,
+				{
+					p: mat.Vec3{6, 2, 1},
+					expectedTree: &KDTree{
+						root: &node{
+							children: [2]*node{
+								&node{
+									children: [2]*node{
+										&node{
+											id:  5,
+											dim: 2,
+										},
+										&node{
+											id:  1,
+											dim: 2,
+										},
 									},
-									&node{
-										id:  1,
-										dim: 2,
-									},
+									id:  4,
+									dim: 1,
 								},
-								id:  4,
-								dim: 1,
-							},
-							&node{
-								children: [2]*node{
-									&node{
-										id:  2,
-										dim: 2,
-									},
+								&node{
+									id:  2,
+									dim: 1,
 								},
-								id:  6,
-								dim: 1,
 							},
+							id:  0,
+							dim: 0,
 						},
-						id:  0,
-						dim: 0,
 					},
 				},
-				createNewTree: true,
-			},
-			"node with left sub tree": {
-				p: mat.Vec3{6, 2, 1},
-				expectedTree: &KDTree{
-					root: &node{
-						children: [2]*node{
-							&node{
-								children: [2]*node{
-									&node{
-										id:  5,
-										dim: 2,
-									},
-									&node{
-										id:  1,
-										dim: 2,
-									},
-								},
-								id:  4,
-								dim: 1,
-							},
-							&node{
-								id:  2,
-								dim: 1,
-							},
-						},
-						id:  0,
-						dim: 0,
-					},
-				},
-				createNewTree: false,
 			},
 			"node both left and right sub trees": {
-				p: mat.Vec3{4, 1, 0},
-				expectedTree: &KDTree{
-					Vec3RandomAccessor: it,
-					root: &node{
-						children: [2]*node{
-							&node{
-								children: [2]*node{
-									&node{id: 5, dim: 2},
-									&node{id: 1, dim: 2},
+				{
+					p: mat.Vec3{4, 1, 0},
+					expectedTree: &KDTree{
+						Vec3RandomAccessor: it,
+						root: &node{
+							children: [2]*node{
+								&node{
+									children: [2]*node{
+										&node{id: 5, dim: 2},
+										&node{id: 1, dim: 2},
+									},
+									id:  4,
+									dim: 1,
 								},
-								id:  4,
-								dim: 1,
-							},
-							&node{
-								children: [2]*node{
-									&node{id: 2, dim: 2},
+								&node{
+									children: [2]*node{
+										&node{id: 2, dim: 2},
+									},
+									id:  6,
+									dim: 1,
 								},
-								id:  6,
-								dim: 1,
 							},
+							id:  3,
+							dim: 0,
 						},
-						id:  3,
-						dim: 0,
 					},
 				},
-				createNewTree: true,
 			},
 		}
-		for name, tt := range testCases {
-			tt := tt
-			t.Run(fmt.Sprintf(
-				"%s: (%.1f,%.1f,%.1f)",
-				name, tt.p[0], tt.p[1], tt.p[2],
-			), func(t *testing.T) {
-				if tt.createNewTree {
-					kdt = New(it)
-				}
-				kdt.deleteNodeImpl(kdt.root, tt.p, 0)
-				if !assertKDTreesEqual(t, it, tt.expectedTree.root, kdt.root) {
-					t.Fatalf("Expected:\n%v\nGot:\n%v", tt.expectedTree, kdt)
+		for name, steps := range testCases {
+			t.Run(name, func(t *testing.T) {
+				kdt = New(it)
+				for _, tt := range steps {
+					kdt.deleteNodeImpl(kdt.root, tt.p, 0)
+					if !assertKDTreesEqual(t, it, tt.expectedTree.root, kdt.root) {
+						t.Fatalf("Expected:\n%v\nGot:\n%v", tt.expectedTree, kdt)
+					}
 				}
 			})
 		}
