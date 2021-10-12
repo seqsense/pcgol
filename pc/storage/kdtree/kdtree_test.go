@@ -198,6 +198,30 @@ func TestKDtree(t *testing.T) {
 			})
 		}
 	})
+
+	t.Run("FindMinimum", func(t *testing.T) {
+		testCases := []struct {
+			dim    int
+			nodeID int
+		}{
+			{dim: 0, nodeID: 4},
+			{dim: 1, nodeID: 3},
+			{dim: 2, nodeID: 3},
+			{dim: 3, nodeID: -1},
+		}
+		for _, tt := range testCases {
+			tt := tt
+			t.Run(fmt.Sprintf("dim: %d", tt.dim), func(t *testing.T) {
+				id, err := kdt.FindMinimum(tt.dim)
+				if id != tt.nodeID {
+					t.Errorf("Expected id: %d, got: %d", tt.nodeID, id)
+				}
+				if tt.dim > 2 && err == nil {
+					t.Errorf("Expected an error when dim>2")
+				}
+			})
+		}
+	})
 }
 
 func TestKDtree_randomCloud(t *testing.T) {
