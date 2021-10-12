@@ -13,7 +13,8 @@ import (
 
 var _ storage.Search = &KDTree{} // KDTree must implement storage.Search
 
-func TestKDtree(t *testing.T) {
+func createTestPointCloud(t *testing.T) pc.Vec3Iterator {
+	t.Helper()
 	pp := &pc.PointCloud{
 		PointCloudHeader: pc.PointCloudHeader{
 			Fields: []string{"x", "y", "z"},
@@ -54,8 +55,30 @@ func TestKDtree(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	kdt := New(it)
+	return it
+}
 
+func assertKDTreesEqual(t *testing.T, it pc.Vec3Iterator, n1, n2 *node) bool {
+	t.Helper()
+	if n1 == nil && n2 == nil {
+		return true
+	}
+	if n1 == nil && n2 != nil {
+		return false
+	}
+	if n2 == nil && n1 != nil {
+		return false
+	}
+	if n1.id != n2.id || !it.Vec3At(n1.id).Equal(it.Vec3At(n2.id)) {
+		return false
+	}
+	return assertKDTreesEqual(t, it, n1.children[0], n2.children[0]) &&
+		assertKDTreesEqual(t, it, n1.children[1], n2.children[1])
+}
+
+func TestKDtree(t *testing.T) {
+	it := createTestPointCloud(t)
+	kdt := New(it)
 	expectedTree := &KDTree{
 		Vec3RandomAccessor: it,
 		root: &node{
@@ -218,6 +241,205 @@ func TestKDtree(t *testing.T) {
 				}
 				if tt.dim > 2 && err == nil {
 					t.Errorf("Expected an error when dim>2")
+				}
+			})
+		}
+	})
+
+	t.Run("deleteNodeImpl", func(t *testing.T) {
+		it := createTestPointCloud(t)
+		var kdt *KDTree
+		testCases := map[string]struct {
+			p             mat.Vec3
+			expectedTree  *KDTree
+			createNewTree bool
+		}{
+			"leaf": {
+				p: mat.Vec3{1, 0, 0},
+				expectedTree: &KDTree{
+					Vec3RandomAccessor: it,
+					root: &node{
+						children: [2]*node{
+							&node{
+								children: [2]*node{
+									nil,
+									&node{id: 1, dim: 2},
+								},
+								id:  4,
+								dim: 1,
+							},
+							&node{
+								children: [2]*node{
+									&node{id: 2, dim: 2},
+									&node{id: 6, dim: 2},
+								},
+								id:  0,
+								dim: 1,
+							},
+						},
+						id:  3,
+						dim: 0,
+					},
+				},
+				createNewTree: true,
+			},
+			"node with right sub tree": {
+				p: mat.Vec3{0, 1, 0},
+				expectedTree: &KDTree{
+					Vec3RandomAccessor: it,
+					root: &node{
+						children: [2]*node{
+							&node{
+								id:  1,
+								dim: 1,
+							},
+							&node{
+								children: [2]*node{
+									&node{id: 2, dim: 2},
+									&node{id: 6, dim: 2},
+								},
+								id:  0,
+								dim: 1,
+							},
+						},
+						id:  3,
+						dim: 0,
+					},
+				},
+				createNewTree: false,
+			},
+			"root": {
+				p: mat.Vec3{3, 0, 0},
+				expectedTree: &KDTree{
+					Vec3RandomAccessor: it,
+					root: &node{
+						children: [2]*node{
+							&node{
+								children: [2]*node{
+									&node{
+										id:  5,
+										dim: 2,
+									},
+									&node{
+										id:  1,
+										dim: 2,
+									},
+								},
+								id:  4,
+								dim: 1,
+							},
+							&node{
+								children: [2]*node{
+									&node{
+										id:  2,
+										dim: 2,
+									},
+								},
+								id:  6,
+								dim: 1,
+							},
+						},
+						id:  0,
+						dim: 0,
+					},
+				},
+				createNewTree: true,
+			},
+			"node with left sub tree": {
+				p: mat.Vec3{6, 2, 1},
+				expectedTree: &KDTree{
+					root: &node{
+						children: [2]*node{
+							&node{
+								children: [2]*node{
+									&node{
+										id:  5,
+										dim: 2,
+									},
+									&node{
+										id:  1,
+										dim: 2,
+									},
+								},
+								id:  4,
+								dim: 1,
+							},
+							&node{
+								id:  2,
+								dim: 1,
+							},
+						},
+						id:  0,
+						dim: 0,
+					},
+				},
+				createNewTree: false,
+			},
+			"node both left and right sub trees": {
+				p: mat.Vec3{4, 1, 0},
+				expectedTree: &KDTree{
+					Vec3RandomAccessor: it,
+					root: &node{
+						children: [2]*node{
+							&node{
+								children: [2]*node{
+									&node{id: 5, dim: 2},
+									&node{id: 1, dim: 2},
+								},
+								id:  4,
+								dim: 1,
+							},
+							&node{
+								children: [2]*node{
+									&node{id: 2, dim: 2},
+								},
+								id:  6,
+								dim: 1,
+							},
+						},
+						id:  3,
+						dim: 0,
+					},
+				},
+				createNewTree: true,
+			},
+		}
+		for name, tt := range testCases {
+			tt := tt
+			t.Run(fmt.Sprintf(
+				"%s: (%.1f,%.1f,%.1f)",
+				name, tt.p[0], tt.p[1], tt.p[2],
+			), func(t *testing.T) {
+				if tt.createNewTree {
+					kdt = New(it)
+				}
+				kdt.deleteNodeImpl(kdt.root, tt.p, 0)
+				if !assertKDTreesEqual(t, it, tt.expectedTree.root, kdt.root) {
+					t.Fatalf("Expected:\n%v\nGot:\n%v", tt.expectedTree, kdt)
+				}
+			})
+		}
+	})
+
+	t.Run("DeleteNode", func(t *testing.T) {
+		it := createTestPointCloud(t)
+		testCases := []struct {
+			p        mat.Vec3
+			hasError bool
+		}{
+			{p: mat.Vec3{6, 2, 1}, hasError: false},
+			{p: mat.Vec3{13, 0, 0}, hasError: true},
+		}
+		for _, tt := range testCases {
+			tt := tt
+			t.Run(fmt.Sprintf(
+				"(%.1f,%.1f,%.1f)",
+				tt.p[0], tt.p[1], tt.p[2],
+			), func(t *testing.T) {
+				kdt := New(it)
+				err := kdt.DeleteNode(tt.p)
+				if tt.hasError != (err != nil) {
+					t.Errorf("Expected an error when trying to delete a point that is not in the tree")
 				}
 			})
 		}
