@@ -59,11 +59,11 @@ func (r *PointToPointICPGradient) Fit(base storage.Search, target pc.Vec3RandomA
 	trans := mat.Translate(0, 0, 0)
 	for i := 0; i < maxIteration; i++ {
 		ev, err := r.Evaluator.Evaluate(base, targetTransformed)
-		stat.Evaluated = *ev
 		stat.NumIteration++
 		if err != nil {
 			return trans, stat, err
 		}
+		stat.Evaluated = *ev
 
 		flat := true
 		for j, g := range ev.Gradient {
