@@ -134,9 +134,9 @@ func (e *PointToPointEvaluator) Evaluate(base storage.Search, target pc.Vec3Rand
 	for i := 0; i < 3; i++ {
 		out.Gradient[i] *= f
 	}
-	fn := 1 / float32(num)
-	if num == 0 {
-		fn = 0
+	var fn float32
+	if num != 0 {
+		fn = 1 / float32(num)
 	}
 	for i := 3; i < 6; i++ {
 		out.Gradient[i] *= fn
