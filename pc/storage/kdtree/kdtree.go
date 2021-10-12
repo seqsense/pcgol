@@ -166,6 +166,41 @@ func (k *KDTree) Print() {
 	k.printImpl(k.root, 0)
 }
 
+func (k *KDTree) deleteNodeImpl(n *node, p mat.Vec3, depth int) *node {
+	if n == nil {
+		return nil
+	}
+
+	pointAtNode := k.Vec3At(n.id)
+	if pointAtNode.Equal(p) {
+		if n.children[1] != nil {
+			minNode := k.findMinimumImpl(n.children[1], n.dim, 0)
+			pointAtMin := k.Vec3At(minNode.id)
+			n.id = minNode.id
+			n.children[1] = k.deleteNodeImpl(n.children[1], pointAtMin, depth+1)
+		} else if n.children[0] != nil {
+			minNode := k.findMinimumImpl(n.children[0], n.dim, 0)
+			pointAtMin := k.Vec3At(minNode.id)
+			n.id = minNode.id
+			n.children[0] = k.deleteNodeImpl(n.children[0], pointAtMin, depth+1)
+		} else {
+			return nil
+		}
+		return n
+	}
+
+	if p[n.dim] < pointAtNode[n.dim] {
+		n.children[0] = k.deleteNodeImpl(n.children[0], p, depth+1)
+	} else {
+		n.children[1] = k.deleteNodeImpl(n.children[1], p, depth+1)
+	}
+	return n
+}
+
+func (k *KDTree) DeleteNode(p mat.Vec3) {
+	k.deleteNodeImpl(k.root, p, 0)
+}
+
 func newNode(ra pc.Vec3RandomAccessor, indice []int, depth int) *node {
 	is := &indiceSorter{
 		ra:     ra,
