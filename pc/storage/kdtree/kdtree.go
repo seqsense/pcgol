@@ -197,8 +197,13 @@ func (k *KDTree) deleteNodeImpl(n *node, p mat.Vec3, depth int) *node {
 	return n
 }
 
-func (k *KDTree) DeleteNode(p mat.Vec3) {
+func (k *KDTree) DeleteNode(p mat.Vec3) error {
+	id, _ := k.Nearest(p, 1e-4)
+	if id == -1 {
+		return fmt.Errorf("%v is not in the tree", p)
+	}
 	k.deleteNodeImpl(k.root, p, 0)
+	return nil
 }
 
 func newNode(ra pc.Vec3RandomAccessor, indice []int, depth int) *node {
