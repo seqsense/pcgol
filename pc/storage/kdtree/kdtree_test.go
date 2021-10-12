@@ -442,6 +442,46 @@ func TestKDtree(t *testing.T) {
 	})
 }
 
+func ExampleKDTree_String() {
+	pp := &pc.PointCloud{
+		PointCloudHeader: pc.PointCloudHeader{
+			Fields: []string{"x", "y", "z"},
+			Size:   []int{4, 4, 4},
+			Type:   []string{"F", "F", "F"},
+			Count:  []int{1, 1, 1},
+			Width:  7,
+			Height: 1,
+		},
+		Points: 7,
+		Data:   make([]byte, 7*4*3),
+	}
+	it, _ := pp.Vec3Iterator()
+	it.SetVec3(mat.Vec3{4, 1, 0}) // 0
+	it.Incr()
+	it.SetVec3(mat.Vec3{2, 2, 1}) // 1
+	it.Incr()
+	it.SetVec3(mat.Vec3{5, 0, 0}) // 2
+	it.Incr()
+	it.SetVec3(mat.Vec3{3, 0, 0}) // 3
+	it.Incr()
+	it.SetVec3(mat.Vec3{0, 1, 0}) // 4
+	it.Incr()
+	it.SetVec3(mat.Vec3{1, 0, 0}) // 5
+	it.Incr()
+	it.SetVec3(mat.Vec3{6, 2, 1}) // 6
+	it, _ = pp.Vec3Iterator()
+	kdt := New(it)
+	fmt.Println(kdt)
+	// Output:
+	// 	                    -> {6.000, 2.000, 1.000}
+	//           -> {4.000, 1.000, 0.000}
+	//                     -> {5.000, 0.000, 0.000}
+	// -> {3.000, 0.000, 0.000}
+	//                     -> {2.000, 2.000, 1.000}
+	//           -> {0.000, 1.000, 0.000}
+	//                     -> {1.000, 0.000, 0.000}
+}
+
 func TestKDtree_randomCloud(t *testing.T) {
 	const (
 		nPoints = 100
