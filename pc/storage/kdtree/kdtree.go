@@ -157,7 +157,7 @@ func (k *KDTree) FindMinimum(dim int) (int, error) {
 func (k *KDTree) stringImpl(n *node, level int) string {
 	if n != nil {
 		s := k.stringImpl(n.children[1], level+1)
-		s += fmt.Sprintf(strings.Repeat(" ", 10*level)+"-> %v\n", k.Vec3At(n.id))
+		s += fmt.Sprintf(strings.Repeat(" ", 10*level)+"-> (%d,%d) %v\n", n.id, n.dim, k.Vec3At(n.id))
 		s += k.stringImpl(n.children[0], level+1)
 		return s
 	}

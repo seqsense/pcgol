@@ -69,7 +69,7 @@ func assertKDTreesEqual(t *testing.T, it pc.Vec3Iterator, n1, n2 *node) bool {
 	if n2 == nil && n1 != nil {
 		return false
 	}
-	if n1.id != n2.id || !it.Vec3At(n1.id).Equal(it.Vec3At(n2.id)) {
+	if n1.id != n2.id || n1.dim != n2.dim || !it.Vec3At(n1.id).Equal(it.Vec3At(n2.id)) {
 		return false
 	}
 	return assertKDTreesEqual(t, it, n1.children[0], n2.children[0]) &&
@@ -473,13 +473,13 @@ func ExampleKDTree_String() {
 	kdt := New(it)
 	fmt.Println(kdt)
 	// Output:
-	// 	                    -> {6.000, 2.000, 1.000}
-	//           -> {4.000, 1.000, 0.000}
-	//                     -> {5.000, 0.000, 0.000}
-	// -> {3.000, 0.000, 0.000}
-	//                     -> {2.000, 2.000, 1.000}
-	//           -> {0.000, 1.000, 0.000}
-	//                     -> {1.000, 0.000, 0.000}
+	//                     -> (6,2) {6.000, 2.000, 1.000}
+	//           -> (0,1) {4.000, 1.000, 0.000}
+	//                     -> (2,2) {5.000, 0.000, 0.000}
+	// -> (3,0) {3.000, 0.000, 0.000}
+	//                     -> (1,2) {2.000, 2.000, 1.000}
+	//           -> (4,1) {0.000, 1.000, 0.000}
+	//                     -> (5,2) {1.000, 0.000, 0.000}
 }
 
 func TestKDtree_randomCloud(t *testing.T) {
