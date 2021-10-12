@@ -16,6 +16,12 @@ var (
 	ErrNotEnoughPairs = errors.New("not enough correspondence pairs")
 )
 
+type EvaluateWeightFn func(distSq float32) float32
+
+var DefaultEvaluateWeightFn = func(_ float32) float32 {
+	return 1
+}
+
 type Evaluated struct {
 	Value    float32
 	Gradient mat.Vec6
@@ -62,6 +68,7 @@ type Evaluator interface {
 type PointToPointEvaluator struct {
 	Corresponder PointToPointCorresponder
 	MinPairs     int
+	WeightFn     EvaluateWeightFn
 }
 
 func (PointToPointEvaluator) HasGradient() bool { return true }
@@ -90,7 +97,12 @@ func (e *PointToPointEvaluator) Evaluate(base storage.Search, target pc.Vec3Rand
 		return nil, ErrNotEnoughPairs
 	}
 	out := &Evaluated{}
-	var num int
+
+	var sumPosWeight, sumRotWeight float32
+	weightFn := e.WeightFn
+	if weightFn == nil {
+		weightFn = DefaultEvaluateWeightFn
+	}
 
 	pairVecs := [2]pc.Vec3RandomAccessor{
 		make(pc.Vec3Slice, len(pairs)),
@@ -102,21 +114,24 @@ func (e *PointToPointEvaluator) Evaluate(base storage.Search, target pc.Vec3Rand
 		pairVecs[0].(pc.Vec3Slice)[i] = pb
 		pairVecs[1].(pc.Vec3Slice)[i] = pt
 
+		w := weightFn(pair.SquaredDistance)
+
 		x0, y0, z0 := pt[0], pt[1], pt[2]
 		x1, y1, z1 := pb[0], pb[1], pb[2]
-		out.Value += pair.SquaredDistance
+		out.Value += w * pair.SquaredDistance
+		sumPosWeight += w
 
-		out.Gradient[0] += 2 * (x0 - x1)
-		out.Gradient[1] += 2 * (y0 - y1)
-		out.Gradient[2] += 2 * (z0 - z1)
+		out.Gradient[0] += w * 2 * (x0 - x1)
+		out.Gradient[1] += w * 2 * (y0 - y1)
+		out.Gradient[2] += w * 2 * (z0 - z1)
 		xd := 2 * (y0*z1 - y1*z0) / (z0*z0 + y0*y0 - 0.5)
 		yd := 2 * (z0*x1 - z1*x0) / (z0*z0 + x0*x0 - 0.5)
 		zd := 2 * (x0*y1 - x1*y0) / (y0*y0 + x0*x0 - 0.5)
 		if !isNaN(xd) && !isNaN(yd) && !isNaN(zd) {
-			out.Gradient[3] += xd
-			out.Gradient[4] += yd
-			out.Gradient[5] += zd
-			num++
+			out.Gradient[3] += w * xd
+			out.Gradient[4] += w * yd
+			out.Gradient[5] += w * zd
+			sumRotWeight += w
 		}
 	}
 
@@ -129,17 +144,20 @@ func (e *PointToPointEvaluator) Evaluate(base storage.Search, target pc.Vec3Rand
 		time.Sleep(debugPlotInterval)
 	}
 
-	f := 1 / float32(len(pairs))
-	out.Value *= f
-	for i := 0; i < 3; i++ {
-		out.Gradient[i] *= f
+	fPos := float32(1)
+	fRot := float32(1)
+	if sumPosWeight > 1 {
+		fPos = 1 / sumPosWeight
 	}
-	var fn float32
-	if num != 0 {
-		fn = 1 / float32(num)
+	if sumRotWeight > 1 {
+		fRot = 1 / sumRotWeight
+	}
+	out.Value *= fPos
+	for i := 0; i < 3; i++ {
+		out.Gradient[i] *= fPos
 	}
 	for i := 3; i < 6; i++ {
-		out.Gradient[i] *= fn
+		out.Gradient[i] *= fRot
 	}
 	return out, nil
 }
