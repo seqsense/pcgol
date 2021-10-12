@@ -154,16 +154,18 @@ func (k *KDTree) FindMinimum(dim int) (int, error) {
 	return node.id, nil
 }
 
-func (k *KDTree) printImpl(n *node, level int) {
+func (k *KDTree) stringImpl(n *node, level int) string {
 	if n != nil {
-		k.printImpl(n.children[1], level+1)
-		fmt.Printf(strings.Repeat(" ", 10*level)+"-> %v\n", k.Vec3At(n.id))
-		k.printImpl(n.children[0], level+1)
+		s := k.stringImpl(n.children[1], level+1)
+		s += fmt.Sprintf(strings.Repeat(" ", 10*level)+"-> %v\n", k.Vec3At(n.id))
+		s += k.stringImpl(n.children[0], level+1)
+		return s
 	}
+	return ""
 }
 
-func (k *KDTree) Print() {
-	k.printImpl(k.root, 0)
+func (k *KDTree) String() string {
+	return k.stringImpl(k.root, 0)
 }
 
 func (k *KDTree) deleteNodeImpl(n *node, p mat.Vec3, depth int) *node {
