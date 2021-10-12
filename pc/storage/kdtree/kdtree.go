@@ -116,6 +116,45 @@ func (k *KDTree) searchLeafNode(p mat.Vec3, base []*node) []*node {
 	return k.searchLeafNode(p, base)
 }
 
+func (k *KDTree) findMinimumImpl(n *node, dim int, depth int) *node {
+
+	if n == nil {
+		return nil
+	}
+
+	minNode := func(d int, ns ...*node) *node {
+		min := ns[0]
+		for _, n := range ns {
+			if n == nil {
+				continue
+			}
+			if k.Vec3At(min.id)[d] > k.Vec3At(n.id)[d] {
+				min = n
+			}
+		}
+		return min
+	}
+
+	if n.dim == dim {
+		if n.children[0] == nil {
+			return n
+		}
+		return k.findMinimumImpl(n.children[0], dim, depth+1)
+	}
+
+	return minNode(dim, n,
+		k.findMinimumImpl(n.children[0], dim, depth+1),
+		k.findMinimumImpl(n.children[1], dim, depth+1))
+}
+
+func (k *KDTree) FindMinimum(dim int) (int, error) {
+	if dim > 2 {
+		return -1, fmt.Errorf("dim should be <3")
+	}
+	node := k.findMinimumImpl(k.root, dim, 0)
+	return node.id, nil
+}
+
 func newNode(ra pc.Vec3RandomAccessor, indice []int, depth int) *node {
 	is := &indiceSorter{
 		ra:     ra,
