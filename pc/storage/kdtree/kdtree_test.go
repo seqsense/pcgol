@@ -3,7 +3,6 @@ package kdtree
 import (
 	"fmt"
 	"math/rand"
-	"reflect"
 	"testing"
 
 	"github.com/seqsense/pcgol/mat"
@@ -58,55 +57,70 @@ func createTestPointCloud(t *testing.T) pc.Vec3Iterator {
 	return it
 }
 
-func assertKDTreesEqual(t *testing.T, it pc.Vec3Iterator, n1, n2 *node) bool {
-	t.Helper()
-	if n1 == nil && n2 == nil {
-		return true
-	}
-	if n1 == nil && n2 != nil {
-		return false
-	}
-	if n2 == nil && n1 != nil {
-		return false
-	}
-	if n1.id != n2.id || n1.dim != n2.dim || !it.Vec3At(n1.id).Equal(it.Vec3At(n2.id)) {
-		return false
-	}
-	return assertKDTreesEqual(t, it, n1.children[0], n2.children[0]) &&
-		assertKDTreesEqual(t, it, n1.children[1], n2.children[1])
-}
-
 func TestKDtree(t *testing.T) {
 	it := createTestPointCloud(t)
 	kdt := New(it)
-	expectedTree := &KDTree{
-		Vec3RandomAccessor: it,
-		root: &node{
-			children: [2]*node{
-				&node{
-					children: [2]*node{
-						&node{id: 5, dim: 2},
-						&node{id: 1, dim: 2},
+
+	t.Run("Equal", func(t *testing.T) {
+		expectedTree := &KDTree{
+			Vec3RandomAccessor: it,
+			root: &node{
+				children: [2]*node{
+					&node{
+						children: [2]*node{
+							&node{id: 5, dim: 2},
+							&node{id: 1, dim: 2},
+						},
+						id:  4,
+						dim: 1,
 					},
-					id:  4,
-					dim: 1,
-				},
-				&node{
-					children: [2]*node{
-						&node{id: 2, dim: 2},
-						&node{id: 6, dim: 2},
+					&node{
+						children: [2]*node{
+							&node{id: 2, dim: 2},
+							&node{id: 6, dim: 2},
+						},
+						id:  0,
+						dim: 1,
 					},
-					id:  0,
-					dim: 1,
 				},
+				id:  3,
+				dim: 0,
 			},
-			id:  3,
-			dim: 0,
-		},
-	}
-	if !reflect.DeepEqual(expectedTree.root, kdt.root) {
-		t.Fatalf("Expected:\n%s\nGot:\n%s", expectedTree.root, kdt.root)
-	}
+		}
+		if !kdt.Equal(expectedTree) {
+			t.Fatalf("%v and %v must be equal", expectedTree, kdt)
+		}
+	})
+
+	t.Run("NotEqual", func(t *testing.T) {
+		expectedTree := &KDTree{
+			Vec3RandomAccessor: it,
+			root: &node{
+				children: [2]*node{
+					&node{
+						children: [2]*node{
+							&node{id: 1, dim: 2},
+						},
+						id:  4,
+						dim: 1,
+					},
+					&node{
+						children: [2]*node{
+							&node{id: 2, dim: 2},
+							&node{id: 6, dim: 2},
+						},
+						id:  0,
+						dim: 1,
+					},
+				},
+				id:  3,
+				dim: 0,
+			},
+		}
+		if kdt.Equal(expectedTree) {
+			t.Fatalf("%v and %v must not be equal", expectedTree, kdt)
+		}
+	})
 
 	t.Run("SearchNode", func(t *testing.T) {
 		testCases := []struct {
@@ -347,6 +361,7 @@ func TestKDtree(t *testing.T) {
 				{
 					p: mat.Vec3{6, 2, 1},
 					expectedTree: &KDTree{
+						Vec3RandomAccessor: it,
 						root: &node{
 							children: [2]*node{
 								&node{
@@ -409,7 +424,7 @@ func TestKDtree(t *testing.T) {
 				kdt = New(it)
 				for _, tt := range steps {
 					kdt.deleteNodeImpl(kdt.root, tt.p, 0)
-					if !assertKDTreesEqual(t, it, tt.expectedTree.root, kdt.root) {
+					if !kdt.Equal(tt.expectedTree) {
 						t.Fatalf("Expected:\n%v\nGot:\n%v", tt.expectedTree, kdt)
 					}
 				}
