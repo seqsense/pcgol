@@ -419,6 +419,80 @@ func TestKDtree(t *testing.T) {
 					},
 				},
 			},
+			"twice the same point": {
+				{
+					pID: 3,
+					expectedTree: &KDTree{
+						Vec3RandomAccessor: it,
+						root: &node{
+							children: [2]*node{
+								&node{
+									children: [2]*node{
+										&node{
+											id:  5,
+											dim: 2,
+										},
+										&node{
+											id:  1,
+											dim: 2,
+										},
+									},
+									id:  4,
+									dim: 1,
+								},
+								&node{
+									children: [2]*node{
+										&node{
+											id:  2,
+											dim: 2,
+										},
+									},
+									id:  6,
+									dim: 1,
+								},
+							},
+							id:  0,
+							dim: 0,
+						},
+					},
+				},
+				{
+					pID: 3,
+					expectedTree: &KDTree{
+						Vec3RandomAccessor: it,
+						root: &node{
+							children: [2]*node{
+								&node{
+									children: [2]*node{
+										&node{
+											id:  5,
+											dim: 2,
+										},
+										&node{
+											id:  1,
+											dim: 2,
+										},
+									},
+									id:  4,
+									dim: 1,
+								},
+								&node{
+									children: [2]*node{
+										&node{
+											id:  2,
+											dim: 2,
+										},
+									},
+									id:  6,
+									dim: 1,
+								},
+							},
+							id:  0,
+							dim: 0,
+						},
+					},
+				},
+			},
 		}
 		for name, steps := range testCases {
 			steps := steps
