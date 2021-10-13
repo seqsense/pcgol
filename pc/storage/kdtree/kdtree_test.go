@@ -536,6 +536,34 @@ func TestKDtree_randomCloud(t *testing.T) {
 	}
 }
 
+func TestKDtree_findMinimum_randomCloud(t *testing.T) {
+	const (
+		nClouds = 1000
+		nPoints = 100
+		width   = 10.0
+	)
+
+	for i := 0; i < nClouds; i++ {
+		pp := generateRandomCloud(t, nPoints, width)
+		it, err := pp.Vec3Iterator()
+		if err != nil {
+			t.Fatal(err)
+		}
+		kdt := New(it)
+		ns := &naiveSearch{it}
+		for dim := 0; dim < 3; dim++ {
+			nodeIDKDTree, err := kdt.findMinimumImpl(kdt.root, dim, 0)
+			if err != nil {
+				t.Fatal(err)
+			}
+			nodeIDNaive := ns.findMinimum(dim)
+			if nodeIDKDTree != nodeIDNaive {
+				t.Fatalf("dim %d: Expected: %d, got %d", dim, nodeIDNaive, nodeIDKDTree)
+			}
+		}
+	}
+}
+
 type naiveSearch struct {
 	ra pc.Vec3RandomAccessor
 }
@@ -550,6 +578,19 @@ func (s *naiveSearch) Nearest(p mat.Vec3, maxRange float32) (int, float32) {
 		}
 	}
 	return id, dsq
+}
+
+func (s *naiveSearch) findMinimum(dim int) int {
+	min := s.ra.Vec3At(0)[dim]
+	id := 0
+	for i := 1; i < s.ra.Len(); i++ {
+		p := s.ra.Vec3At(i)
+		if p[dim] < min {
+			min = p[dim]
+			id = i
+		}
+	}
+	return id
 }
 
 func randomPoint(width float32) mat.Vec3 {
