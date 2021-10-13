@@ -11,9 +11,9 @@ import (
 func rodriguesToRotation(v mat.Vec3) mat.Mat4 {
 	ang := v.Norm()
 	r := mat.Mat4{
-		0, -v[2], v[1], 0,
-		v[2], 0, -v[0], 0,
-		-v[1], v[0], 0, 0,
+		0, v[2], -v[1], 0,
+		-v[2], 0, v[0], 0,
+		v[1], -v[0], 0, 0,
 		0, 0, 0, 0,
 	}
 	i := mat.Mat4{

@@ -132,9 +132,9 @@ func (e *PointToPointEvaluator) Evaluate(base storage.Search, target pc.Vec3Rand
 		out.Gradient[0] += w * 2 * (x0 - x1)
 		out.Gradient[1] += w * 2 * (y0 - y1)
 		out.Gradient[2] += w * 2 * (z0 - z1)
-		out.Gradient[3] += w * 2 * (z0*(y0-y1) - y0*(z0-z1))
-		out.Gradient[4] += w * 2 * (x0*(z0-z1) - z0*(x0-x1))
-		out.Gradient[5] += w * 2 * (y0*(x0-x1) - x0*(y0-y1))
+		out.Gradient[3] += w * 2 * (y0*(z0-z1) - z0*(y0-y1))
+		out.Gradient[4] += w * 2 * (z0*(x0-x1) - x0*(z0-z1))
+		out.Gradient[5] += w * 2 * (x0*(y0-y1) - y0*(x0-x1))
 
 		out.DistRMS += w * pt.NormSq()
 	}
