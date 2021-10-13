@@ -62,63 +62,107 @@ func TestKDtree(t *testing.T) {
 	kdt := New(it)
 
 	t.Run("Equal", func(t *testing.T) {
-		expectedTree := &KDTree{
-			Vec3RandomAccessor: it,
-			root: &node{
-				children: [2]*node{
-					&node{
-						children: [2]*node{
-							&node{id: 5, dim: 2},
-							&node{id: 1, dim: 2},
-						},
-						id:  4,
-						dim: 1,
-					},
-					&node{
-						children: [2]*node{
-							&node{id: 2, dim: 2},
-							&node{id: 6, dim: 2},
-						},
-						id:  0,
-						dim: 1,
-					},
-				},
-				id:  3,
-				dim: 0,
-			},
+		// explicitely check all nodes of k and check if they correspond to the nodes of kdt
+		isKDT := func(k *KDTree) bool {
+			assertions := []func() bool{
+				func() bool { return k.root != nil },
+				func() bool { return k.root.id == 3 },
+				func() bool { return k.root.dim == 0 },
+				func() bool { return k.root.children[0] != nil },
+				func() bool { return k.root.children[0].id == 4 },
+				func() bool { return k.root.children[0].dim == 1 },
+				func() bool { return k.root.children[0].children[0] != nil },
+				func() bool { return k.root.children[0].children[0].id == 5 },
+				func() bool { return k.root.children[0].children[0].dim == 2 },
+				func() bool { return k.root.children[0].children[0].children[0] == nil },
+				func() bool { return k.root.children[0].children[0].children[1] == nil },
+				func() bool { return k.root.children[0].children[1] != nil },
+				func() bool { return k.root.children[0].children[1].id == 1 },
+				func() bool { return k.root.children[0].children[1].dim == 2 },
+				func() bool { return k.root.children[0].children[1].children[0] == nil },
+				func() bool { return k.root.children[0].children[1].children[1] == nil },
+				func() bool { return k.root.children[1] != nil },
+				func() bool { return k.root.children[1].id == 0 },
+				func() bool { return k.root.children[1].dim == 1 },
+				func() bool { return k.root.children[1].children[0] != nil },
+				func() bool { return k.root.children[1].children[0].id == 2 },
+				func() bool { return k.root.children[1].children[0].dim == 2 },
+				func() bool { return k.root.children[1].children[0].children[0] == nil },
+				func() bool { return k.root.children[1].children[0].children[1] == nil },
+				func() bool { return k.root.children[1].children[1] != nil },
+				func() bool { return k.root.children[1].children[1].id == 6 },
+				func() bool { return k.root.children[1].children[1].dim == 2 },
+				func() bool { return k.root.children[1].children[1].children[0] == nil },
+				func() bool { return k.root.children[1].children[1].children[1] == nil },
+			}
+			for _, assertion := range assertions {
+				if !assertion() {
+					return false
+				}
+			}
+			return true
 		}
-		if !kdt.Equal(expectedTree) {
-			t.Fatalf("%v and %v must be equal", expectedTree, kdt)
-		}
-	})
 
-	t.Run("NotEqual", func(t *testing.T) {
-		expectedTree := &KDTree{
-			Vec3RandomAccessor: it,
-			root: &node{
-				children: [2]*node{
-					&node{
-						children: [2]*node{
-							&node{id: 1, dim: 2},
+		testCases := map[string]*KDTree{
+			"equal": &KDTree{
+				Vec3RandomAccessor: it,
+				root: &node{
+					children: [2]*node{
+						&node{
+							children: [2]*node{
+								&node{id: 5, dim: 2},
+								&node{id: 1, dim: 2},
+							},
+							id:  4,
+							dim: 1,
 						},
-						id:  4,
-						dim: 1,
-					},
-					&node{
-						children: [2]*node{
-							&node{id: 2, dim: 2},
-							&node{id: 6, dim: 2},
+						&node{
+							children: [2]*node{
+								&node{id: 2, dim: 2},
+								&node{id: 6, dim: 2},
+							},
+							id:  0,
+							dim: 1,
 						},
-						id:  0,
-						dim: 1,
 					},
+					id:  3,
+					dim: 0,
 				},
-				id:  3,
-				dim: 0,
+			},
+			"not equal": &KDTree{
+				Vec3RandomAccessor: it,
+				root: &node{
+					children: [2]*node{
+						&node{
+							children: [2]*node{
+								&node{id: 1, dim: 2},
+							},
+							id:  4,
+							dim: 1,
+						},
+						&node{
+							children: [2]*node{
+								&node{id: 2, dim: 2},
+								&node{id: 6, dim: 2},
+							},
+							id:  0,
+							dim: 1,
+						},
+					},
+					id:  3,
+					dim: 0,
+				},
 			},
 		}
-		if kdt.Equal(expectedTree) {
-			t.Fatalf("%v and %v must not be equal", expectedTree, kdt)
+
+		for name, testTree := range testCases {
+			testTree := testTree
+			name := name
+			t.Run(name, func(t *testing.T) {
+				if kdt.Equal(testTree) != isKDT(testTree) {
+					t.Fatalf("%v and %v must be %s", testTree, kdt, name)
+				}
+			})
 		}
 	})
 
