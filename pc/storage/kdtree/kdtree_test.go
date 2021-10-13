@@ -238,35 +238,23 @@ func TestKDtree(t *testing.T) {
 
 	t.Run("FindMinimum", func(t *testing.T) {
 		testCases := []struct {
-			dim  int
-			node *node
+			dim    int
+			nodeID int
 		}{
-			{dim: 0, node: &node{id: 4}},
-			{dim: 1, node: &node{id: 3}},
-			{dim: 2, node: &node{id: 3}},
-			{dim: 3, node: nil},
+			{dim: 0, nodeID: 4},
+			{dim: 1, nodeID: 3},
+			{dim: 2, nodeID: 3},
+			{dim: 3, nodeID: -1},
 		}
 
-		nodeEqual := func(n1, n2 *node) bool {
-			if n1 == nil && n2 == nil {
-				return true
-			}
-			if n1 == nil && n2 != nil {
-				return false
-			}
-			if n1 != nil && n2 == nil {
-				return false
-			}
-			return n1.id == n2.id
-		}
 		for _, tt := range testCases {
 			tt := tt
 			t.Run(fmt.Sprintf("dim: %d", tt.dim), func(t *testing.T) {
-				n, err := kdt.findMinimumImpl(kdt.root, tt.dim, 0)
-				if !nodeEqual(n, tt.node) {
-					t.Errorf("Expected %v, got: %v", tt.node, n)
+				nID, err := kdt.findMinimumImpl(kdt.root, tt.dim, 0)
+				if nID != tt.nodeID {
+					t.Errorf("Expected %v, got: %v", tt.nodeID, nID)
 				}
-				if tt.node == nil && err == nil {
+				if tt.dim > 2 && err == nil {
 					t.Errorf("Expected an error when dim>2")
 				}
 			})

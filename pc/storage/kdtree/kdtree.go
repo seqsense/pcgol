@@ -116,23 +116,27 @@ func (k *KDTree) searchLeafNode(p mat.Vec3, base []*node) []*node {
 	return k.searchLeafNode(p, base)
 }
 
-func (k *KDTree) findMinimumImpl(n *node, dim int, depth int) (*node, error) {
+func (k *KDTree) findMinimumImpl(n *node, dim int, depth int) (int, error) {
 	if dim > 2 {
-		return nil, fmt.Errorf("dim should be <3")
+		return -1, fmt.Errorf("dim should be <3")
 	}
 
 	if n == nil {
-		return nil, nil
+		return -1, nil
 	}
 
-	minNode := func(d int, ns ...*node) *node {
-		min := ns[0]
-		for _, n := range ns {
-			if n == nil {
+	minNode := func(d int, nIDs ...int) int {
+		min := -1
+		for _, nID := range nIDs {
+			if min == -1 {
+				min = nID
 				continue
 			}
-			if k.Vec3At(min.id)[d] > k.Vec3At(n.id)[d] {
-				min = n
+			if nID == -1 {
+				continue
+			}
+			if k.Vec3At(min)[d] > k.Vec3At(nID)[d] {
+				min = nID
 			}
 		}
 		return min
@@ -140,24 +144,24 @@ func (k *KDTree) findMinimumImpl(n *node, dim int, depth int) (*node, error) {
 
 	if n.dim == dim {
 		if n.children[0] == nil {
-			return n, nil
+			return n.id, nil
 		}
 		min, err := k.findMinimumImpl(n.children[0], dim, depth+1)
 		if err != nil {
-			return nil, err
+			return -1, err
 		}
 		return min, nil
 	}
 
 	min0, err := k.findMinimumImpl(n.children[0], dim, depth+1)
 	if err != nil {
-		return nil, err
+		return -1, err
 	}
 	min1, err := k.findMinimumImpl(n.children[1], dim, depth+1)
 	if err != nil {
-		return nil, err
+		return -1, err
 	}
-	return minNode(dim, n, min0, min1), nil
+	return minNode(dim, n.id, min0, min1), nil
 }
 
 func (k *KDTree) stringImpl(n *node, depth int) string {
@@ -181,23 +185,23 @@ func (k *KDTree) deleteNodeImpl(n *node, pID int, depth int) (*node, error) {
 
 	if pID == n.id {
 		if n.children[1] != nil {
-			minNode, err := k.findMinimumImpl(n.children[1], n.dim, 0)
+			minNodeID, err := k.findMinimumImpl(n.children[1], n.dim, depth)
 			if err != nil {
 				return nil, err
 			}
-			n.id = minNode.id
-			children1, err := k.deleteNodeImpl(n.children[1], minNode.id, depth+1)
+			n.id = minNodeID
+			children1, err := k.deleteNodeImpl(n.children[1], minNodeID, depth+1)
 			if err != nil {
 				return nil, err
 			}
 			n.children[1] = children1
 		} else if n.children[0] != nil {
-			minNode, err := k.findMinimumImpl(n.children[0], n.dim, 0)
+			minNodeID, err := k.findMinimumImpl(n.children[0], n.dim, depth)
 			if err != nil {
 				return nil, err
 			}
-			n.id = minNode.id
-			children0, err := k.deleteNodeImpl(n.children[0], minNode.id, depth+1)
+			n.id = minNodeID
+			children0, err := k.deleteNodeImpl(n.children[0], minNodeID, depth+1)
 			if err != nil {
 				return nil, err
 			}
