@@ -574,7 +574,6 @@ func ExampleKDTree_String() {
 }
 
 func testNearestRandomCloud(t *testing.T, it pc.Vec3Iterator, k *KDTree, ns *naiveSearch, nPoints int, width float32) {
-	t.Helper()
 	for i := 0; i < nPoints; i++ {
 		p := randomPoint(width)
 		maxRange := rand.Float32() * width
@@ -655,7 +654,7 @@ func TestKDtree_DeletePoint_randomCloud(t *testing.T) {
 	}
 	kdt := New(it)
 	ns := &naiveSearch{ra: it, deletedPoints: []int{}}
-	for _, i := range rand.Perm(nPoints/3) {
+	for _, i := range rand.Perm(nPoints / 3) {
 		err := kdt.DeletePoint(i)
 		if err != nil {
 			t.Fatal(err)
