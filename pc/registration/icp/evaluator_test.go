@@ -51,15 +51,27 @@ func TestPointToPointEvaluator(t *testing.T) {
 		ev.Gradient[dY] * factor,
 		ev.Gradient[dZ] * factor,
 	}
-	updatedTarget := make(pc.Vec3Slice, len(target))
+	updatedTargetRot := make(pc.Vec3Slice, len(target))
 	for i, p := range target {
-		updatedTarget[i] = dR.Transform(p).Add(dT)
+		updatedTargetRot[i] = dR.Transform(p)
 	}
-	ev2, err := e.Evaluate(kdt, updatedTarget)
+	ev2, err := e.Evaluate(kdt, updatedTargetRot)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if ev2.Value >= ev.Value {
-		t.Fatalf("Evaluated value is not decreased: %f !< %f", ev2.Value, ev.Value)
+		t.Fatalf("Evaluated value is not decreased by rotation: %f !< %f", ev2.Value, ev.Value)
+	}
+
+	updatedTargetTrans := make(pc.Vec3Slice, len(target))
+	for i, p := range target {
+		updatedTargetTrans[i] = p.Add(dT)
+	}
+	ev3, err := e.Evaluate(kdt, updatedTargetTrans)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ev3.Value >= ev.Value {
+		t.Fatalf("Evaluated value is not decreased by translation: %f !< %f", ev3.Value, ev.Value)
 	}
 }
