@@ -655,8 +655,7 @@ func TestKDtree_DeletePoint_randomCloud(t *testing.T) {
 	}
 	kdt := New(it)
 	ns := &naiveSearch{ra: it, deletedPoints: []int{}}
-	p := rand.Perm(nPoints)
-	for _, i := range p[:int(nPoints/3)] {
+	for _, i := range rand.Perm(nPoints/3) {
 		err := kdt.DeletePoint(i)
 		if err != nil {
 			t.Fatal(err)
