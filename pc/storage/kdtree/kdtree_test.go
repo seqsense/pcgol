@@ -12,6 +12,128 @@ import (
 
 var _ storage.Search = &KDTree{} // KDTree must implement storage.Search
 
+func TestKDtree_Equal(t *testing.T) {
+	vecs := pc.Vec3Slice{
+		{0, 0, 0},
+		{1, 0, 0},
+	}
+	testCases := map[string]struct {
+		a, b  *KDTree
+		equal bool
+	}{
+		"NoNode==NoNode": {
+			a:     &KDTree{root: nil},
+			b:     &KDTree{root: nil},
+			equal: true,
+		},
+		"NoNode!=1Child": {
+			a: &KDTree{root: nil},
+			b: &KDTree{root: &node{
+				children: [2]*node{
+					&node{
+						dim: 1,
+					},
+				},
+			}},
+			equal: false,
+		},
+		"NoNode!=2Children": {
+			a: &KDTree{root: nil},
+			b: &KDTree{root: &node{
+				children: [2]*node{
+					&node{dim: 1},
+					&node{dim: 1},
+				},
+			}},
+			equal: false,
+		},
+		"1Child!=2Children": {
+			a: &KDTree{root: &node{
+				dim: 1,
+			}},
+			b: &KDTree{root: &node{
+				children: [2]*node{
+					&node{dim: 1},
+					&node{dim: 1},
+				},
+			}},
+			equal: false,
+		},
+		"2ChildrenWrongDim": {
+			a: &KDTree{root: &node{
+				children: [2]*node{
+					&node{dim: 1},
+					&node{dim: 1},
+				},
+			}},
+			b: &KDTree{root: &node{
+				children: [2]*node{
+					&node{dim: 2},
+					&node{dim: 2},
+				},
+			}},
+			equal: false,
+		},
+		"2ChildrenSameVec": {
+			a: &KDTree{root: &node{
+				children: [2]*node{
+					&node{dim: 1, id: 0},
+					&node{dim: 1, id: 1},
+				},
+			}},
+			b: &KDTree{root: &node{
+				children: [2]*node{
+					&node{dim: 1, id: 0},
+					&node{dim: 1, id: 1},
+				},
+			}},
+			equal: true,
+		},
+		"2ChildrenLeftRightSwapped": {
+			a: &KDTree{root: &node{
+				children: [2]*node{
+					&node{dim: 1, id: 0},
+					&node{dim: 1, id: 1},
+				},
+			}},
+			b: &KDTree{root: &node{
+				children: [2]*node{
+					&node{dim: 1, id: 1},
+					&node{dim: 1, id: 0},
+				},
+			}},
+			equal: false,
+		},
+	}
+	for name, tt := range testCases {
+		tt := tt
+		tt.a.Vec3RandomAccessor = vecs
+		tt.b.Vec3RandomAccessor = vecs
+		t.Run(name, func(t *testing.T) {
+			t.Run("Forward", func(t *testing.T) {
+				ret := tt.a.Equal(tt.b)
+				if ret != tt.equal {
+					if tt.equal {
+						t.Errorf("Must equal\na: %v\nb: %v", tt.a, tt.b)
+					} else {
+						t.Errorf("Must not equal\na: %v\nb: %v", tt.a, tt.b)
+					}
+				}
+			})
+			t.Run("Reversed", func(t *testing.T) {
+				ret := tt.b.Equal(tt.a)
+				if ret != tt.equal {
+					if tt.equal {
+						t.Errorf("Must equal\na: %v\nb: %v", tt.b, tt.a)
+					} else {
+						t.Errorf("Must not equal\na: %v\nb: %v", tt.b, tt.a)
+					}
+				}
+			})
+		})
+	}
+}
+
 func createTestPointCloud(t *testing.T) pc.Vec3Iterator {
 	t.Helper()
 	pp := &pc.PointCloud{
