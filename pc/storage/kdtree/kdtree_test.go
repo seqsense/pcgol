@@ -12,6 +12,128 @@ import (
 
 var _ storage.Search = &KDTree{} // KDTree must implement storage.Search
 
+func TestKDtree_Equal(t *testing.T) {
+	vecs := pc.Vec3Slice{
+		{0, 0, 0},
+		{1, 0, 0},
+	}
+	testCases := map[string]struct {
+		a, b  *KDTree
+		equal bool
+	}{
+		"NoNode==NoNode": {
+			a:     &KDTree{root: nil},
+			b:     &KDTree{root: nil},
+			equal: true,
+		},
+		"NoNode!=1Child": {
+			a: &KDTree{root: nil},
+			b: &KDTree{root: &node{
+				children: [2]*node{
+					&node{
+						dim: 1,
+					},
+				},
+			}},
+			equal: false,
+		},
+		"NoNode!=2Children": {
+			a: &KDTree{root: nil},
+			b: &KDTree{root: &node{
+				children: [2]*node{
+					&node{dim: 1},
+					&node{dim: 1},
+				},
+			}},
+			equal: false,
+		},
+		"1Child!=2Children": {
+			a: &KDTree{root: &node{
+				dim: 1,
+			}},
+			b: &KDTree{root: &node{
+				children: [2]*node{
+					&node{dim: 1},
+					&node{dim: 1},
+				},
+			}},
+			equal: false,
+		},
+		"2ChildrenWrongDim": {
+			a: &KDTree{root: &node{
+				children: [2]*node{
+					&node{dim: 1},
+					&node{dim: 1},
+				},
+			}},
+			b: &KDTree{root: &node{
+				children: [2]*node{
+					&node{dim: 2},
+					&node{dim: 2},
+				},
+			}},
+			equal: false,
+		},
+		"2ChildrenSameVec": {
+			a: &KDTree{root: &node{
+				children: [2]*node{
+					&node{dim: 1, id: 0},
+					&node{dim: 1, id: 1},
+				},
+			}},
+			b: &KDTree{root: &node{
+				children: [2]*node{
+					&node{dim: 1, id: 0},
+					&node{dim: 1, id: 1},
+				},
+			}},
+			equal: true,
+		},
+		"2ChildrenLeftRightSwapped": {
+			a: &KDTree{root: &node{
+				children: [2]*node{
+					&node{dim: 1, id: 0},
+					&node{dim: 1, id: 1},
+				},
+			}},
+			b: &KDTree{root: &node{
+				children: [2]*node{
+					&node{dim: 1, id: 1},
+					&node{dim: 1, id: 0},
+				},
+			}},
+			equal: false,
+		},
+	}
+	for name, tt := range testCases {
+		tt := tt
+		tt.a.Vec3RandomAccessor = vecs
+		tt.b.Vec3RandomAccessor = vecs
+		t.Run(name, func(t *testing.T) {
+			t.Run("Forward", func(t *testing.T) {
+				ret := tt.a.Equal(tt.b)
+				if ret != tt.equal {
+					if tt.equal {
+						t.Errorf("Must equal\na: %v\nb: %v", tt.a, tt.b)
+					} else {
+						t.Errorf("Must not equal\na: %v\nb: %v", tt.a, tt.b)
+					}
+				}
+			})
+			t.Run("Reversed", func(t *testing.T) {
+				ret := tt.b.Equal(tt.a)
+				if ret != tt.equal {
+					if tt.equal {
+						t.Errorf("Must equal\na: %v\nb: %v", tt.b, tt.a)
+					} else {
+						t.Errorf("Must not equal\na: %v\nb: %v", tt.b, tt.a)
+					}
+				}
+			})
+		})
+	}
+}
+
 func createTestPointCloud(t *testing.T) pc.Vec3Iterator {
 	t.Helper()
 	pp := &pc.PointCloud{
@@ -60,111 +182,6 @@ func createTestPointCloud(t *testing.T) pc.Vec3Iterator {
 func TestKDtree(t *testing.T) {
 	it := createTestPointCloud(t)
 	kdt := New(it)
-
-	t.Run("Equal", func(t *testing.T) {
-		// explicitely check all nodes of k and check if they correspond to the nodes of kdt
-		isKDT := func(k *KDTree) bool {
-			assertions := []func() bool{
-				func() bool { return k.root != nil },
-				func() bool { return k.root.id == 3 },
-				func() bool { return k.root.dim == 0 },
-				func() bool { return k.root.children[0] != nil },
-				func() bool { return k.root.children[0].id == 4 },
-				func() bool { return k.root.children[0].dim == 1 },
-				func() bool { return k.root.children[0].children[0] != nil },
-				func() bool { return k.root.children[0].children[0].id == 5 },
-				func() bool { return k.root.children[0].children[0].dim == 2 },
-				func() bool { return k.root.children[0].children[0].children[0] == nil },
-				func() bool { return k.root.children[0].children[0].children[1] == nil },
-				func() bool { return k.root.children[0].children[1] != nil },
-				func() bool { return k.root.children[0].children[1].id == 1 },
-				func() bool { return k.root.children[0].children[1].dim == 2 },
-				func() bool { return k.root.children[0].children[1].children[0] == nil },
-				func() bool { return k.root.children[0].children[1].children[1] == nil },
-				func() bool { return k.root.children[1] != nil },
-				func() bool { return k.root.children[1].id == 0 },
-				func() bool { return k.root.children[1].dim == 1 },
-				func() bool { return k.root.children[1].children[0] != nil },
-				func() bool { return k.root.children[1].children[0].id == 2 },
-				func() bool { return k.root.children[1].children[0].dim == 2 },
-				func() bool { return k.root.children[1].children[0].children[0] == nil },
-				func() bool { return k.root.children[1].children[0].children[1] == nil },
-				func() bool { return k.root.children[1].children[1] != nil },
-				func() bool { return k.root.children[1].children[1].id == 6 },
-				func() bool { return k.root.children[1].children[1].dim == 2 },
-				func() bool { return k.root.children[1].children[1].children[0] == nil },
-				func() bool { return k.root.children[1].children[1].children[1] == nil },
-			}
-			for _, assertion := range assertions {
-				if !assertion() {
-					return false
-				}
-			}
-			return true
-		}
-
-		testCases := map[string]*KDTree{
-			"equal": &KDTree{
-				Vec3RandomAccessor: it,
-				root: &node{
-					children: [2]*node{
-						&node{
-							children: [2]*node{
-								&node{id: 5, dim: 2},
-								&node{id: 1, dim: 2},
-							},
-							id:  4,
-							dim: 1,
-						},
-						&node{
-							children: [2]*node{
-								&node{id: 2, dim: 2},
-								&node{id: 6, dim: 2},
-							},
-							id:  0,
-							dim: 1,
-						},
-					},
-					id:  3,
-					dim: 0,
-				},
-			},
-			"not equal": &KDTree{
-				Vec3RandomAccessor: it,
-				root: &node{
-					children: [2]*node{
-						&node{
-							children: [2]*node{
-								&node{id: 1, dim: 2},
-							},
-							id:  4,
-							dim: 1,
-						},
-						&node{
-							children: [2]*node{
-								&node{id: 2, dim: 2},
-								&node{id: 6, dim: 2},
-							},
-							id:  0,
-							dim: 1,
-						},
-					},
-					id:  3,
-					dim: 0,
-				},
-			},
-		}
-
-		for name, testTree := range testCases {
-			testTree := testTree
-			name := name
-			t.Run(name, func(t *testing.T) {
-				if kdt.Equal(testTree) != isKDT(testTree) {
-					t.Fatalf("%v and %v must be %s", testTree, kdt, name)
-				}
-			})
-		}
-	})
 
 	t.Run("SearchNode", func(t *testing.T) {
 		testCases := []struct {
