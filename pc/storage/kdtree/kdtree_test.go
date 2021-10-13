@@ -104,6 +104,171 @@ func TestKDtree_Equal(t *testing.T) {
 			}},
 			equal: false,
 		},
+		"2ChildrenLeftChildHas1Child!=2ChildrenLeftChildHasNoChildren": {
+			a: &KDTree{root: &node{
+				children: [2]*node{
+					&node{children: [2]*node{&node{}}},
+					&node{},
+				},
+			}},
+			b: &KDTree{root: &node{
+				children: [2]*node{
+					&node{},
+					&node{},
+				},
+			}},
+			equal: false,
+		},
+		"2ChildrenLeftChildHas1Child!=2ChildrenRightChildHas1Child": {
+			a: &KDTree{root: &node{
+				children: [2]*node{
+					&node{children: [2]*node{&node{}}},
+					&node{},
+				},
+			}},
+			b: &KDTree{root: &node{
+				children: [2]*node{
+					&node{},
+					&node{children: [2]*node{&node{}}},
+				},
+			}},
+			equal: false,
+		},
+		"2ChildrenLeftChildHas1Child": {
+			a: &KDTree{root: &node{
+				children: [2]*node{
+					&node{children: [2]*node{&node{}}},
+					&node{},
+				},
+			}},
+			b: &KDTree{root: &node{
+				children: [2]*node{
+					&node{children: [2]*node{&node{}}},
+					&node{},
+				},
+			}},
+			equal: true,
+		},
+		"2ChildrenRightChildHas1Child!=2ChildrenRightChildHasNoChildren": {
+			a: &KDTree{root: &node{
+				children: [2]*node{
+					&node{},
+					&node{children: [2]*node{&node{}}},
+				},
+			}},
+			b: &KDTree{root: &node{
+				children: [2]*node{
+					&node{},
+					&node{},
+				},
+			}},
+			equal: false,
+		},
+		"2ChildrenRightChildHas1Child!=2ChildrenLeftChildHas1Child": {
+			a: &KDTree{root: &node{
+				children: [2]*node{
+					&node{},
+					&node{children: [2]*node{&node{}}},
+				},
+			}},
+			b: &KDTree{root: &node{
+				children: [2]*node{
+					&node{children: [2]*node{&node{}}},
+					&node{},
+				},
+			}},
+			equal: false,
+		},
+		"2ChildrenRightChildHas1Child": {
+			a: &KDTree{root: &node{
+				children: [2]*node{
+					&node{},
+					&node{children: [2]*node{&node{}}},
+				},
+			}},
+			b: &KDTree{root: &node{
+				children: [2]*node{
+					&node{},
+					&node{children: [2]*node{&node{}}},
+				},
+			}},
+			equal: true,
+		},
+		"2ChildrenBothChildrenHas1Child!=2ChildrenLeftChildHas1Child": {
+			a: &KDTree{root: &node{
+				children: [2]*node{
+					&node{children: [2]*node{&node{}}},
+					&node{children: [2]*node{&node{}}},
+				},
+			}},
+			b: &KDTree{root: &node{
+				children: [2]*node{
+					&node{children: [2]*node{&node{}}},
+					&node{},
+				},
+			}},
+			equal: false,
+		},
+		"2ChildrenBothChildrenHas1Child!=2ChildrenRightChildHas1Child": {
+			a: &KDTree{root: &node{
+				children: [2]*node{
+					&node{children: [2]*node{&node{}}},
+					&node{children: [2]*node{&node{}}},
+				},
+			}},
+			b: &KDTree{root: &node{
+				children: [2]*node{
+					&node{},
+					&node{children: [2]*node{&node{}}},
+				},
+			}},
+			equal: false,
+		},
+		"2ChildrenBothChildrenHas1Child": {
+			a: &KDTree{root: &node{
+				children: [2]*node{
+					&node{children: [2]*node{&node{}}},
+					&node{children: [2]*node{&node{}}},
+				},
+			}},
+			b: &KDTree{root: &node{
+				children: [2]*node{
+					&node{children: [2]*node{&node{}}},
+					&node{children: [2]*node{&node{}}},
+				},
+			}},
+			equal: true,
+		},
+		"2ChildrenLeftChildHas1ChildWrongDim": {
+			a: &KDTree{root: &node{
+				children: [2]*node{
+					&node{children: [2]*node{&node{dim: 1}}},
+					&node{},
+				},
+			}},
+			b: &KDTree{root: &node{
+				children: [2]*node{
+					&node{children: [2]*node{&node{dim: 2}}},
+					&node{},
+				},
+			}},
+			equal: false,
+		},
+		"2ChildrenBothChildrenHas1ChildSameVecs": {
+			a: &KDTree{root: &node{
+				children: [2]*node{
+					&node{children: [2]*node{&node{id: 0, dim: 2}}},
+					&node{children: [2]*node{&node{id: 1, dim: 2}}},
+				},
+			}},
+			b: &KDTree{root: &node{
+				children: [2]*node{
+					&node{children: [2]*node{&node{id: 0, dim: 2}}},
+					&node{children: [2]*node{&node{id: 1, dim: 2}}},
+				},
+			}},
+			equal: true,
+		},
 	}
 	for name, tt := range testCases {
 		tt := tt
