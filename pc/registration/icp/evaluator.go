@@ -159,7 +159,7 @@ func (e *PointToPointEvaluator) Evaluate(base storage.Search, target pc.Vec3Rand
 	out.DistRMS = float32(math.Sqrt(float64(out.DistRMS * f)))
 
 	// As rotation formula is approxymated near zero,
-	// non-linear large rotation gradient may be calculated
+	// non-linear large rotation gradient may appear
 	// when the clouds are not yet aligned well.
 	// Limit translation caused by rotation.
 	rotLimit := float32(1)
