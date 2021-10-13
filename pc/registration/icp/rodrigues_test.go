@@ -15,7 +15,8 @@ func TestRodriguesToRotation(t *testing.T) {
 				r := rodriguesToRotation(v)
 
 				vn := v.Normalized()
-				expected := mat.Rotate(vn[0], vn[1], vn[2], v.Norm())
+				// TODO: fix mat.Rotate that is transposed
+				expected := mat.Rotate(vn[0], vn[1], vn[2], -v.Norm())
 
 				for i := range r {
 					diff := r[i] - expected[i]

@@ -11,14 +11,14 @@ import (
 
 func TestPointToPointICPGradient(t *testing.T) {
 	base0 := pc.Vec3Slice{
-		mat.Vec3{-2, 0, 0},
+		mat.Vec3{-2.1, 0, 0},
 		mat.Vec3{-1, 1, 0},
 		mat.Vec3{0, 2, 0},
 		mat.Vec3{1, 1, 1},
 		mat.Vec3{2, 0, 0},
 	}
 	base1 := pc.Vec3Slice{
-		mat.Vec3{-2, 0, 5},
+		mat.Vec3{-2.1, 0, 5},
 		mat.Vec3{-1, 1, 5},
 		mat.Vec3{0, 2, 5},
 		mat.Vec3{1, 1, 6},
