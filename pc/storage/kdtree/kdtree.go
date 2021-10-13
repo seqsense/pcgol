@@ -116,9 +116,13 @@ func (k *KDTree) searchLeafNode(p mat.Vec3, base []*node) []*node {
 	return k.searchLeafNode(p, base)
 }
 
-func (k *KDTree) findMinimumImpl(n *node, dim int, depth int) *node {
+func (k *KDTree) findMinimumImpl(n *node, dim int, depth int) (*node, error) {
+	if dim > 2 {
+		return nil, fmt.Errorf("dim should be <3")
+	}
+
 	if n == nil {
-		return nil
+		return nil, nil
 	}
 
 	minNode := func(d int, ns ...*node) *node {
@@ -136,29 +140,31 @@ func (k *KDTree) findMinimumImpl(n *node, dim int, depth int) *node {
 
 	if n.dim == dim {
 		if n.children[0] == nil {
-			return n
+			return n, nil
 		}
-		return k.findMinimumImpl(n.children[0], dim, depth+1)
+		min, err := k.findMinimumImpl(n.children[0], dim, depth+1)
+		if err != nil {
+			return nil, err
+		}
+		return min, nil
 	}
 
-	return minNode(dim, n,
-		k.findMinimumImpl(n.children[0], dim, depth+1),
-		k.findMinimumImpl(n.children[1], dim, depth+1))
-}
-
-func (k *KDTree) FindMinimum(dim int) (int, error) {
-	if dim > 2 {
-		return -1, fmt.Errorf("dim should be <3")
+	min0, err := k.findMinimumImpl(n.children[0], dim, depth+1)
+	if err != nil {
+		return nil, err
 	}
-	node := k.findMinimumImpl(k.root, dim, 0)
-	return node.id, nil
+	min1, err := k.findMinimumImpl(n.children[1], dim, depth+1)
+	if err != nil {
+		return nil, err
+	}
+	return minNode(dim, n, min0, min1), nil
 }
 
-func (k *KDTree) stringImpl(n *node, level int) string {
+func (k *KDTree) stringImpl(n *node, depth int) string {
 	if n != nil {
-		s := k.stringImpl(n.children[1], level+1)
-		s += fmt.Sprintf(strings.Repeat(" ", 10*level)+"-> (%d,%d) %v\n", n.id, n.dim, k.Vec3At(n.id))
-		s += k.stringImpl(n.children[0], level+1)
+		s := k.stringImpl(n.children[1], depth+1)
+		s += fmt.Sprintf(strings.Repeat(" ", 10*depth)+"-> (%d,%d) %v\n", n.id, n.dim, k.Vec3At(n.id))
+		s += k.stringImpl(n.children[0], depth+1)
 		return s
 	}
 	return ""
@@ -168,44 +174,64 @@ func (k *KDTree) String() string {
 	return k.stringImpl(k.root, 0)
 }
 
-func (k *KDTree) deleteNodeImpl(n *node, p mat.Vec3, depth int) *node {
+func (k *KDTree) deleteNodeImpl(n *node, pID int, depth int) (*node, error) {
 	if n == nil {
-		return nil
+		return nil, nil
+	}
+
+	if pID == n.id {
+		if n.children[1] != nil {
+			minNode, err := k.findMinimumImpl(n.children[1], n.dim, 0)
+			if err != nil {
+				return nil, err
+			}
+			n.id = minNode.id
+			children1, err := k.deleteNodeImpl(n.children[1], minNode.id, depth+1)
+			if err != nil {
+				return nil, err
+			}
+			n.children[1] = children1
+		} else if n.children[0] != nil {
+			minNode, err := k.findMinimumImpl(n.children[0], n.dim, 0)
+			if err != nil {
+				return nil, err
+			}
+			n.id = minNode.id
+			children0, err := k.deleteNodeImpl(n.children[0], minNode.id, depth+1)
+			if err != nil {
+				return nil, err
+			}
+			n.children[0] = children0
+		} else {
+			return nil, nil
+		}
+		return n, nil
 	}
 
 	pointAtNode := k.Vec3At(n.id)
-	if pointAtNode.Equal(p) {
-		if n.children[1] != nil {
-			minNode := k.findMinimumImpl(n.children[1], n.dim, 0)
-			pointAtMin := k.Vec3At(minNode.id)
-			n.id = minNode.id
-			n.children[1] = k.deleteNodeImpl(n.children[1], pointAtMin, depth+1)
-		} else if n.children[0] != nil {
-			minNode := k.findMinimumImpl(n.children[0], n.dim, 0)
-			pointAtMin := k.Vec3At(minNode.id)
-			n.id = minNode.id
-			n.children[0] = k.deleteNodeImpl(n.children[0], pointAtMin, depth+1)
-		} else {
-			return nil
-		}
-		return n
-	}
-
+	p := k.Vec3At(pID)
 	if p[n.dim] < pointAtNode[n.dim] {
-		n.children[0] = k.deleteNodeImpl(n.children[0], p, depth+1)
+		children0, err := k.deleteNodeImpl(n.children[0], pID, depth+1)
+		if err != nil {
+			return nil, err
+		}
+		n.children[0] = children0
 	} else {
-		n.children[1] = k.deleteNodeImpl(n.children[1], p, depth+1)
+		children1, err := k.deleteNodeImpl(n.children[1], pID, depth+1)
+		if err != nil {
+			return nil, err
+		}
+		n.children[1] = children1
 	}
-	return n
+	return n, nil
 }
 
-func (k *KDTree) DeleteNode(p mat.Vec3) error {
-	id, _ := k.Nearest(p, 1e-4)
-	if id == -1 {
-		return fmt.Errorf("%v is not in the tree", p)
+func (k *KDTree) DeletePoint(pID int) error {
+	if pID < 0 || pID > k.Len()-1 {
+		return fmt.Errorf("%d does not correspond to any point in the tree", pID)
 	}
-	k.deleteNodeImpl(k.root, p, 0)
-	return nil
+	_, err := k.deleteNodeImpl(k.root, pID, 0)
+	return err
 }
 
 func equal(n1, n2 *node, it1, it2 pc.Vec3RandomAccessor) bool {

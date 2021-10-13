@@ -238,22 +238,35 @@ func TestKDtree(t *testing.T) {
 
 	t.Run("FindMinimum", func(t *testing.T) {
 		testCases := []struct {
-			dim    int
-			nodeID int
+			dim  int
+			node *node
 		}{
-			{dim: 0, nodeID: 4},
-			{dim: 1, nodeID: 3},
-			{dim: 2, nodeID: 3},
-			{dim: 3, nodeID: -1},
+			{dim: 0, node: &node{id: 4}},
+			{dim: 1, node: &node{id: 3}},
+			{dim: 2, node: &node{id: 3}},
+			{dim: 3, node: nil},
+		}
+
+		nodeEqual := func(n1, n2 *node) bool {
+			if n1 == nil && n2 == nil {
+				return true
+			}
+			if n1 == nil && n2 != nil {
+				return false
+			}
+			if n1 != nil && n2 == nil {
+				return false
+			}
+			return n1.id == n2.id
 		}
 		for _, tt := range testCases {
 			tt := tt
 			t.Run(fmt.Sprintf("dim: %d", tt.dim), func(t *testing.T) {
-				id, err := kdt.FindMinimum(tt.dim)
-				if id != tt.nodeID {
-					t.Errorf("Expected id: %d, got: %d", tt.nodeID, id)
+				n, err := kdt.findMinimumImpl(kdt.root, tt.dim, 0)
+				if !nodeEqual(n, tt.node) {
+					t.Errorf("Expected %v, got: %v", tt.node, n)
 				}
-				if tt.dim > 2 && err == nil {
+				if tt.node == nil && err == nil {
 					t.Errorf("Expected an error when dim>2")
 				}
 			})
@@ -264,12 +277,12 @@ func TestKDtree(t *testing.T) {
 		it := createTestPointCloud(t)
 		var kdt *KDTree
 		testCases := map[string][]struct {
-			p            mat.Vec3
+			pID          int
 			expectedTree *KDTree
 		}{
 			"leaf then node with right sub tree": {
 				{
-					p: mat.Vec3{1, 0, 0},
+					pID: 5,
 					expectedTree: &KDTree{
 						Vec3RandomAccessor: it,
 						root: &node{
@@ -297,7 +310,7 @@ func TestKDtree(t *testing.T) {
 					},
 				},
 				{
-					p: mat.Vec3{0, 1, 0},
+					pID: 4,
 					expectedTree: &KDTree{
 						Vec3RandomAccessor: it,
 						root: &node{
@@ -323,7 +336,7 @@ func TestKDtree(t *testing.T) {
 			},
 			"root then node with left sub tree": {
 				{
-					p: mat.Vec3{3, 0, 0},
+					pID: 3,
 					expectedTree: &KDTree{
 						Vec3RandomAccessor: it,
 						root: &node{
@@ -359,7 +372,7 @@ func TestKDtree(t *testing.T) {
 					},
 				},
 				{
-					p: mat.Vec3{6, 2, 1},
+					pID: 6,
 					expectedTree: &KDTree{
 						Vec3RandomAccessor: it,
 						root: &node{
@@ -391,7 +404,7 @@ func TestKDtree(t *testing.T) {
 			},
 			"node both left and right sub trees": {
 				{
-					p: mat.Vec3{4, 1, 0},
+					pID: 0,
 					expectedTree: &KDTree{
 						Vec3RandomAccessor: it,
 						root: &node{
@@ -420,10 +433,11 @@ func TestKDtree(t *testing.T) {
 			},
 		}
 		for name, steps := range testCases {
+			steps := steps
 			t.Run(name, func(t *testing.T) {
 				kdt = New(it)
 				for _, tt := range steps {
-					kdt.deleteNodeImpl(kdt.root, tt.p, 0)
+					kdt.deleteNodeImpl(kdt.root, tt.pID, 0)
 					if !kdt.Equal(tt.expectedTree) {
 						t.Fatalf("Expected:\n%v\nGot:\n%v", tt.expectedTree, kdt)
 					}
@@ -432,23 +446,23 @@ func TestKDtree(t *testing.T) {
 		}
 	})
 
-	t.Run("DeleteNode", func(t *testing.T) {
+	t.Run("DeletePoint", func(t *testing.T) {
 		it := createTestPointCloud(t)
 		testCases := []struct {
-			p        mat.Vec3
+			pID      int
 			hasError bool
 		}{
-			{p: mat.Vec3{6, 2, 1}, hasError: false},
-			{p: mat.Vec3{13, 0, 0}, hasError: true},
+			{pID: 6, hasError: false},
+			{pID: -1, hasError: true},
+			{pID: 123, hasError: true},
 		}
 		for _, tt := range testCases {
 			tt := tt
 			t.Run(fmt.Sprintf(
-				"(%.1f,%.1f,%.1f)",
-				tt.p[0], tt.p[1], tt.p[2],
+				"point ID: %d", tt.pID,
 			), func(t *testing.T) {
 				kdt := New(it)
-				err := kdt.DeleteNode(tt.p)
+				err := kdt.DeletePoint(tt.pID)
 				if tt.hasError != (err != nil) {
 					t.Errorf("Expected an error when trying to delete a point that is not in the tree")
 				}
