@@ -5,6 +5,8 @@ import (
 	"strings"
 )
 
+// Mat4 represents 4x4 matrix stored by (column * 4 + row) index.
+// (Column is stored first to optimize memory access when transforming vector.)
 type Mat4 [16]float32
 
 func (m Mat4) Floats() [16]float32 {
