@@ -564,6 +564,33 @@ func TestKDtree_findMinimum_randomCloud(t *testing.T) {
 	}
 }
 
+func TestKDtree_DeletePoint_randomCloud(t *testing.T) {
+	const (
+		nPoints  = 100
+		width    = 10.0
+		maxRange = 1e-6
+	)
+
+	pp := generateRandomCloud(t, nPoints, width)
+	it, err := pp.Vec3Iterator()
+	if err != nil {
+		t.Fatal(err)
+	}
+	kdt := New(it)
+	for i := 0; i < it.Len(); i++ {
+		p := it.Vec3At(i)
+		err := kdt.DeletePoint(i)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		idKDTree, _ := kdt.Nearest(p, maxRange)
+		if idKDTree != -1 {
+			t.Fatalf("%d %0.3f: Expected: -1, got: %d", i, p, idKDTree)
+		}
+	}
+}
+
 type naiveSearch struct {
 	ra pc.Vec3RandomAccessor
 }
