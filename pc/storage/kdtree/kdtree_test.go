@@ -487,7 +487,7 @@ func TestKDtree(t *testing.T) {
 		}
 	})
 
-	t.Run("deleteNodeImpl", func(t *testing.T) {
+	t.Run("DeletePoint", func(t *testing.T) {
 		it := createTestPointCloud(t)
 		var kdt *KDTree
 		testCases := map[string][]struct {
@@ -719,40 +719,26 @@ func TestKDtree(t *testing.T) {
 					},
 				},
 			},
+			"InvalidPointID": {
+				{pID: -1, expectedTree: nil},
+				{pID: 123, expectedTree: nil},
+			},
 		}
 		for name, steps := range testCases {
 			steps := steps
 			t.Run(name, func(t *testing.T) {
 				kdt = New(it)
 				for _, tt := range steps {
-					kdt.deleteNodeImpl(kdt.root, tt.pID, 0)
-					if !kdt.Equal(tt.expectedTree) {
-						t.Fatalf("Expected:\n%v\nGot:\n%v", tt.expectedTree, kdt)
+					err := kdt.DeletePoint(tt.pID)
+					if tt.expectedTree == nil {
+						if err == nil {
+							t.Errorf("Expected an error when trying to delete a point that is not in the tree")
+						}
+					} else {
+						if !kdt.Equal(tt.expectedTree) {
+							t.Fatalf("Expected:\n%v\nGot:\n%v", tt.expectedTree, kdt)
+						}
 					}
-				}
-			})
-		}
-	})
-
-	t.Run("DeletePoint", func(t *testing.T) {
-		it := createTestPointCloud(t)
-		testCases := []struct {
-			pID      int
-			hasError bool
-		}{
-			{pID: 6, hasError: false},
-			{pID: -1, hasError: true},
-			{pID: 123, hasError: true},
-		}
-		for _, tt := range testCases {
-			tt := tt
-			t.Run(fmt.Sprintf(
-				"pointID:%d", tt.pID,
-			), func(t *testing.T) {
-				kdt := New(it)
-				err := kdt.DeletePoint(tt.pID)
-				if tt.hasError != (err != nil) {
-					t.Errorf("Expected an error when trying to delete a point that is not in the tree")
 				}
 			})
 		}
