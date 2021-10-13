@@ -493,10 +493,12 @@ func TestKDtree(t *testing.T) {
 		testCases := map[string][]struct {
 			pID          int
 			expectedTree *KDTree
+			hasError     bool
 		}{
 			"LeafThenNodeWithRightSubTree": {
 				{
-					pID: 5,
+					pID:      5,
+					hasError: false,
 					expectedTree: &KDTree{
 						Vec3RandomAccessor: it,
 						root: &node{
@@ -524,7 +526,8 @@ func TestKDtree(t *testing.T) {
 					},
 				},
 				{
-					pID: 4,
+					pID:      4,
+					hasError: false,
 					expectedTree: &KDTree{
 						Vec3RandomAccessor: it,
 						root: &node{
@@ -550,7 +553,8 @@ func TestKDtree(t *testing.T) {
 			},
 			"RootThenNodeWithLeftSubTree": {
 				{
-					pID: 3,
+					pID:      3,
+					hasError: false,
 					expectedTree: &KDTree{
 						Vec3RandomAccessor: it,
 						root: &node{
@@ -586,7 +590,8 @@ func TestKDtree(t *testing.T) {
 					},
 				},
 				{
-					pID: 6,
+					pID:      6,
+					hasError: false,
 					expectedTree: &KDTree{
 						Vec3RandomAccessor: it,
 						root: &node{
@@ -618,7 +623,8 @@ func TestKDtree(t *testing.T) {
 			},
 			"NodeWithBothLeftAndRightSubTrees": {
 				{
-					pID: 0,
+					pID:      0,
+					hasError: false,
 					expectedTree: &KDTree{
 						Vec3RandomAccessor: it,
 						root: &node{
@@ -647,7 +653,8 @@ func TestKDtree(t *testing.T) {
 			},
 			"TwiceTheSamePoint": {
 				{
-					pID: 3,
+					pID:      3,
+					hasError: false,
 					expectedTree: &KDTree{
 						Vec3RandomAccessor: it,
 						root: &node{
@@ -683,7 +690,8 @@ func TestKDtree(t *testing.T) {
 					},
 				},
 				{
-					pID: 3,
+					pID:      3,
+					hasError: false,
 					expectedTree: &KDTree{
 						Vec3RandomAccessor: it,
 						root: &node{
@@ -720,8 +728,14 @@ func TestKDtree(t *testing.T) {
 				},
 			},
 			"InvalidPointID": {
-				{pID: -1, expectedTree: nil},
-				{pID: 123, expectedTree: nil},
+				{
+					pID:      -1,
+					hasError: true,
+				},
+				{
+					pID:      123,
+					hasError: true,
+				},
 			},
 		}
 		for name, steps := range testCases {
@@ -730,14 +744,15 @@ func TestKDtree(t *testing.T) {
 				kdt = New(it)
 				for _, tt := range steps {
 					err := kdt.DeletePoint(tt.pID)
-					if tt.expectedTree == nil {
+					testKDT := tt.expectedTree
+					if tt.hasError {
 						if err == nil {
 							t.Errorf("Expected an error when trying to delete a point that is not in the tree")
 						}
-					} else {
-						if !kdt.Equal(tt.expectedTree) {
-							t.Fatalf("Expected:\n%v\nGot:\n%v", tt.expectedTree, kdt)
-						}
+						testKDT = kdt
+					}
+					if !kdt.Equal(testKDT) {
+						t.Fatalf("Expected:\n%v\nGot:\n%v", testKDT, kdt)
 					}
 				}
 			})
