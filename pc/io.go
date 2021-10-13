@@ -221,6 +221,15 @@ func Marshal(pp *PointCloud, w io.Writer) error {
 		}
 		return ret
 	}
+
+	// Set a default value to Viewpoint if it was not provided.
+	// Viewpoint is optional for all computation so it might not be always filled in
+	// when manually creating PointCloud object but it is required by pcl_viewer and
+	// pcdeditor to successfully load a pcd file.
+	if len(pp.Viewpoint) == 0 {
+		pp.Viewpoint = []float32{0, 0, 0, 1, 0, 0, 0}
+	}
+
 	header := fmt.Sprintf(
 		`VERSION %0.1f
 FIELDS %s
