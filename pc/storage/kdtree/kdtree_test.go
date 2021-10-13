@@ -310,7 +310,7 @@ func TestKDtree(t *testing.T) {
 
 		for _, tt := range testCases {
 			tt := tt
-			t.Run(fmt.Sprintf("dim: %d", tt.dim), func(t *testing.T) {
+			t.Run(fmt.Sprintf("dim:%d", tt.dim), func(t *testing.T) {
 				nID, err := kdt.findMinimumImpl(kdt.root, tt.dim, 0)
 				if nID != tt.nodeID {
 					t.Errorf("Expected %v, got: %v", tt.nodeID, nID)
@@ -329,7 +329,7 @@ func TestKDtree(t *testing.T) {
 			pID          int
 			expectedTree *KDTree
 		}{
-			"leaf then node with right sub tree": {
+			"LeafThenNodeWithRightSubTree": {
 				{
 					pID: 5,
 					expectedTree: &KDTree{
@@ -383,7 +383,7 @@ func TestKDtree(t *testing.T) {
 					},
 				},
 			},
-			"root then node with left sub tree": {
+			"RootThenNodeWithLeftSubTree": {
 				{
 					pID: 3,
 					expectedTree: &KDTree{
@@ -451,7 +451,7 @@ func TestKDtree(t *testing.T) {
 					},
 				},
 			},
-			"node both left and right sub trees": {
+			"NodeWithBothLeftAndRightSubTrees": {
 				{
 					pID: 0,
 					expectedTree: &KDTree{
@@ -480,7 +480,7 @@ func TestKDtree(t *testing.T) {
 					},
 				},
 			},
-			"twice the same point": {
+			"TwiceTheSamePoint": {
 				{
 					pID: 3,
 					expectedTree: &KDTree{
@@ -582,7 +582,7 @@ func TestKDtree(t *testing.T) {
 		for _, tt := range testCases {
 			tt := tt
 			t.Run(fmt.Sprintf(
-				"point ID: %d", tt.pID,
+				"pointID:%d", tt.pID,
 			), func(t *testing.T) {
 				kdt := New(it)
 				err := kdt.DeletePoint(tt.pID)
