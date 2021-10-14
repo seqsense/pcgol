@@ -98,7 +98,7 @@ func (k *KDTree) nearestImpl(p mat.Vec3, nodes []*node, maxRangeSq float32) (int
 	return id, dsq
 }
 
-func (k *KDTree) RangeSearch(p mat.Vec3, maxRange float32) []int {
+func (k *KDTree) Range(p mat.Vec3, maxRange float32) []int {
 	neighbors := []int{}
 	if k.root == nil {
 		return neighbors
@@ -107,11 +107,11 @@ func (k *KDTree) RangeSearch(p mat.Vec3, maxRange float32) []int {
 	defer k.poolNodeArray.Put(nodesOrig)
 
 	nodes := k.searchLeafNode(p, nodesOrig)
-	k.rangeSearchImpl(p, nodes, maxRange*maxRange, &neighbors)
+	k.rangeImpl(p, nodes, maxRange*maxRange, &neighbors)
 	return neighbors
 }
 
-func (k *KDTree) rangeSearchImpl(p mat.Vec3, nodes []*node, maxRangeSq float32, neighbors *[]int) {
+func (k *KDTree) rangeImpl(p mat.Vec3, nodes []*node, maxRangeSq float32, neighbors *[]int) {
 	i := len(nodes) - 1
 	id := nodes[i].id
 	if (k.Vec3At(id).Sub(p)).NormSq() < maxRangeSq {
@@ -141,7 +141,7 @@ func (k *KDTree) rangeSearchImpl(p mat.Vec3, nodes []*node, maxRangeSq float32, 
 
 		nodesOrig := k.newNodeArray(nextNode)
 		ns := k.searchLeafNode(p, nodesOrig)
-		k.rangeSearchImpl(p, ns, maxRangeSq, neighbors)
+		k.rangeImpl(p, ns, maxRangeSq, neighbors)
 		k.poolNodeArray.Put(nodesOrig)
 	}
 }

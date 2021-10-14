@@ -8,4 +8,5 @@ import (
 type Search interface {
 	pc.Vec3RandomAccessor
 	Nearest(p mat.Vec3, maxRange float32) (int, float32)
+	Range(p mat.Vec3, maxRange float32) []int
 }

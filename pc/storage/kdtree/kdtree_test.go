@@ -704,10 +704,10 @@ func TestKDtree_RangeSearch_randomCloud(t *testing.T) {
 		p := randomPoint(width)
 		maxRange := rand.Float32() * width
 
-		idsNaive := ns.RangeSearch(p, maxRange)
+		idsNaive := ns.Range(p, maxRange)
 		sort.Ints(idsNaive)
 
-		idsKDTree := kdt.RangeSearch(p, maxRange)
+		idsKDTree := kdt.Range(p, maxRange)
 		sort.Ints(idsKDTree)
 
 		if !reflect.DeepEqual(idsNaive, idsKDTree) {
@@ -745,7 +745,7 @@ func (s *naiveSearch) Nearest(p mat.Vec3, maxRange float32) (int, float32) {
 	return id, dsq
 }
 
-func (s *naiveSearch) RangeSearch(p mat.Vec3, maxRange float32) []int {
+func (s *naiveSearch) Range(p mat.Vec3, maxRange float32) []int {
 	dsqTh := maxRange * maxRange
 	ids := []int{}
 	for i := 0; i < s.ra.Len(); i++ {
