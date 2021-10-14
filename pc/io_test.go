@@ -1,9 +1,11 @@
 package pc
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"reflect"
 	"testing"
 )
 
@@ -71,4 +73,79 @@ func TestUnmarshalAscii(t *testing.T) {
 		vt.Incr()
 		lt.Incr()
 	}
+}
+
+func TestMarshal(t *testing.T) {
+	t.Run("CheckViewPoint", func(t *testing.T) {
+		testCases := map[string]struct {
+			pp             *PointCloud
+			expectedHeader PointCloudHeader
+		}{
+			"NoViewpointProvided": {
+				pp: &PointCloud{
+					PointCloudHeader: PointCloudHeader{
+						Fields: []string{"x", "y", "z"},
+						Size:   []int{4, 4, 4},
+						Count:  []int{1, 1, 1},
+						Type:   []string{"F", "F", "F"},
+						Width:  3,
+						Height: 1,
+					},
+					Points: 3,
+					Data:   make([]byte, 3*4*3),
+				},
+				expectedHeader: PointCloudHeader{
+					Fields:    []string{"x", "y", "z"},
+					Size:      []int{4, 4, 4},
+					Count:     []int{1, 1, 1},
+					Type:      []string{"F", "F", "F"},
+					Width:     3,
+					Height:    1,
+					Viewpoint: []float32{0, 0, 0, 1, 0, 0, 0},
+				},
+			},
+			"ViewpointProvided": {
+				pp: &PointCloud{
+					PointCloudHeader: PointCloudHeader{
+						Fields:    []string{"x", "y", "z"},
+						Size:      []int{4, 4, 4},
+						Count:     []int{1, 1, 1},
+						Type:      []string{"F", "F", "F"},
+						Width:     3,
+						Height:    1,
+						Viewpoint: []float32{1, 2, 3, -0.333, 0.003, 0.895, -0.298},
+					},
+					Points: 3,
+					Data:   make([]byte, 3*4*3),
+				},
+				expectedHeader: PointCloudHeader{
+					Fields:    []string{"x", "y", "z"},
+					Size:      []int{4, 4, 4},
+					Count:     []int{1, 1, 1},
+					Type:      []string{"F", "F", "F"},
+					Width:     3,
+					Height:    1,
+					Viewpoint: []float32{1, 2, 3, -0.333, 0.003, 0.895, -0.298},
+				},
+			},
+		}
+
+		for name, tt := range testCases {
+			tt := tt
+			t.Run(name, func(t *testing.T) {
+				obuf := &bytes.Buffer{}
+				err := Marshal(tt.pp, obuf)
+				if err != nil {
+					t.Fatal(err)
+				}
+				pp2, err := Unmarshal(obuf)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if !reflect.DeepEqual(tt.expectedHeader, pp2.PointCloudHeader) {
+					t.Errorf("Expected %v, got %v", tt.expectedHeader, pp2.PointCloudHeader)
+				}
+			})
+		}
+	})
 }
