@@ -133,7 +133,7 @@ func TestMarshal(t *testing.T) {
 		for name, tt := range testCases {
 			tt := tt
 			t.Run(name, func(t *testing.T) {
-				obuf := bytes.NewBufferString("")
+				obuf := &bytes.Buffer{}
 				err := Marshal(tt.pp, obuf)
 				if err != nil {
 					t.Fatal(err)
