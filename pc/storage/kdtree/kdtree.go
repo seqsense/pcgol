@@ -49,7 +49,7 @@ func (k *KDTree) newNodeArray(n0 *node) []*node {
 
 func (k *KDTree) Nearest(p mat.Vec3, maxRange float32) (int, float32) {
 	if k.root == nil {
-		return -1, -1
+		return -1, maxRange * maxRange
 	}
 	nodesOrig := k.newNodeArray(k.root)
 	defer k.poolNodeArray.Put(nodesOrig)
