@@ -98,6 +98,54 @@ func (k *KDTree) nearestImpl(p mat.Vec3, nodes []*node, maxRangeSq float32) (int
 	return id, dsq
 }
 
+func (k *KDTree) RangeSearch(p mat.Vec3, maxRange float32) []int {
+	neighbors := []int{}
+	if k.root == nil {
+		return neighbors
+	}
+	nodesOrig := k.newNodeArray(k.root)
+	defer k.poolNodeArray.Put(nodesOrig)
+
+	nodes := k.searchLeafNode(p, nodesOrig)
+	k.rangeSearchImpl(p, nodes, maxRange*maxRange, &neighbors)
+	return neighbors
+}
+
+func (k *KDTree) rangeSearchImpl(p mat.Vec3, nodes []*node, maxRangeSq float32, neighbors *[]int) {
+	i := len(nodes) - 1
+	id := nodes[i].id
+	if (k.Vec3At(id).Sub(p)).NormSq() < maxRangeSq {
+		*neighbors = append(*neighbors, id)
+	}
+	for j := i - 1; j >= 0; j-- {
+		pivot := k.Vec3At(nodes[j].id)
+		dim := nodes[j].dim
+		fromPivot := p[dim] - pivot[dim]
+		fromPivotSq := fromPivot * fromPivot
+		if fromPivotSq > maxRangeSq {
+			continue
+		}
+		dsqPivot := (pivot.Sub(p)).NormSq()
+		if dsqPivot < maxRangeSq {
+			*neighbors = append(*neighbors, nodes[j].id)
+		}
+		var nextNode *node
+		if nodes[j].children[0] == nodes[j+1] {
+			nextNode = nodes[j].children[1]
+		} else {
+			nextNode = nodes[j].children[0]
+		}
+		if nextNode == nil {
+			continue
+		}
+
+		nodesOrig := k.newNodeArray(nextNode)
+		ns := k.searchLeafNode(p, nodesOrig)
+		k.rangeSearchImpl(p, ns, maxRangeSq, neighbors)
+		k.poolNodeArray.Put(nodesOrig)
+	}
+}
+
 func (k *KDTree) searchLeafNode(p mat.Vec3, base []*node) []*node {
 	i := len(base) - 1
 	parent := base[i]
