@@ -246,27 +246,6 @@ func (k *KDTree) DeletePoint(pID int) error {
 	return nil
 }
 
-func equal(n1, n2 *node, it1, it2 pc.Vec3RandomAccessor) bool {
-	if n1 == nil && n2 == nil {
-		return true
-	}
-	if n1 == nil && n2 != nil {
-		return false
-	}
-	if n2 == nil && n1 != nil {
-		return false
-	}
-	if n1.id != n2.id || n1.dim != n2.dim || !it1.Vec3At(n1.id).Equal(it2.Vec3At(n2.id)) {
-		return false
-	}
-	return equal(n1.children[0], n2.children[0], it1, it2) &&
-		equal(n1.children[1], n2.children[1], it1, it2)
-}
-
-func (k *KDTree) Equal(k2 *KDTree) bool {
-	return equal(k.root, k2.root, k, k2)
-}
-
 func newNode(ra pc.Vec3RandomAccessor, indice []int, depth int) *node {
 	is := &indiceSorter{
 		ra:     ra,
