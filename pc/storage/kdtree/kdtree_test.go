@@ -3,6 +3,7 @@ package kdtree
 import (
 	"fmt"
 	"math/rand"
+	"reflect"
 	"testing"
 
 	"github.com/seqsense/pcgol/mat"
@@ -342,6 +343,11 @@ func createTestPointCloud(t *testing.T) pc.Vec3Iterator {
 		t.Fatal(err)
 	}
 	return it
+}
+
+func kdtreeDeepExpectEqual(t *testing.T, a, b *KDTree) bool {
+	t.Helper()
+	return reflect.DeepEqual(a.root, b.root) && reflect.DeepEqual(a.Vec3RandomAccessor, b.Vec3RandomAccessor)
 }
 
 func TestKDtree(t *testing.T) {
@@ -751,7 +757,7 @@ func TestKDtree(t *testing.T) {
 						}
 						testKDT = kdt
 					}
-					if !kdt.Equal(testKDT) {
+					if !kdtreeDeepExpectEqual(t, kdt, testKDT) {
 						t.Fatalf("Expected:\n%v\nGot:\n%v", testKDT, kdt)
 					}
 				}
