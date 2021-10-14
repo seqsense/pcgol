@@ -128,19 +128,13 @@ func (k *KDTree) findMinimumImpl(n *node, dim int, depth int) (int, error) {
 		return -1, nil
 	}
 
-	minNode := func(d int, nIDs ...int) int {
-		min := -1
-		for _, nID := range nIDs {
-			if min == -1 {
-				min = nID
-				continue
-			}
-			if nID == -1 {
-				continue
-			}
-			if k.Vec3At(min)[d] > k.Vec3At(nID)[d] {
-				min = nID
-			}
+	minNode := func(d int, nID1, nID2, nID3 int) int {
+		min := nID1
+		if nID2 != -1 && k.Vec3At(nID2)[d] < k.Vec3At(min)[d] {
+			min = nID2
+		}
+		if nID3 != -1 && k.Vec3At(nID3)[d] < k.Vec3At(min)[d] {
+			min = nID3
 		}
 		return min
 	}
