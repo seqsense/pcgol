@@ -632,7 +632,7 @@ func TestKDtree_Nearest_randomCloud(t *testing.T) {
 		t.Fatal(err)
 	}
 	kdt := New(it)
-	ns := &naiveSearch{ra: it, deletedPoints: map[int]bool{}}
+	ns := newNaiveSearch(it)
 	testNearestRandomCloud(t, it, kdt, ns, nPoints, width)
 }
 
@@ -650,7 +650,7 @@ func TestKDtree_findMinimum_randomCloud(t *testing.T) {
 			t.Fatal(err)
 		}
 		kdt := New(it)
-		ns := &naiveSearch{ra: it, deletedPoints: map[int]bool{}}
+		ns := newNaiveSearch(it)
 		for dim := 0; dim < 3; dim++ {
 			nodeIDKDTree, err := kdt.findMinimumImpl(kdt.root, dim, 0)
 			if err != nil {
@@ -676,7 +676,7 @@ func TestKDtree_DeletePoint_randomCloud(t *testing.T) {
 		t.Fatal(err)
 	}
 	kdt := New(it)
-	ns := &naiveSearch{ra: it, deletedPoints: map[int]bool{}}
+	ns := newNaiveSearch(it)
 	for _, i := range rand.Perm(nPoints / 3) {
 		err := kdt.DeletePoint(i)
 		if err != nil {
@@ -699,8 +699,7 @@ func TestKDtree_RangeSearch_randomCloud(t *testing.T) {
 		t.Fatal(err)
 	}
 	kdt := New(it)
-	ns := &naiveSearch{ra: it, deletedPoints: map[int]bool{}}
-
+	ns := newNaiveSearch(it)
 	for i := 0; i < nPoints; i++ {
 		p := randomPoint(width)
 		maxRange := rand.Float32() * width
@@ -721,14 +720,21 @@ func TestKDtree_RangeSearch_randomCloud(t *testing.T) {
 
 type naiveSearch struct {
 	ra            pc.Vec3RandomAccessor
-	deletedPoints map[int]bool
+	deletedPoints []bool
+}
+
+func newNaiveSearch(ra pc.Vec3RandomAccessor) *naiveSearch {
+	return &naiveSearch{
+		ra:            ra,
+		deletedPoints: make([]bool, ra.Len()),
+	}
 }
 
 func (s *naiveSearch) Nearest(p mat.Vec3, maxRange float32) (int, float32) {
 	dsq := maxRange * maxRange
 	id := -1
 	for i := 0; i < s.ra.Len(); i++ {
-		if s.isDeleted(i) {
+		if s.deletedPoints[i] {
 			continue
 		}
 		dsq1 := s.ra.Vec3At(i).Sub(p).NormSq()
@@ -743,7 +749,7 @@ func (s *naiveSearch) RangeSearch(p mat.Vec3, maxRange float32) []int {
 	dsqTh := maxRange * maxRange
 	ids := []int{}
 	for i := 0; i < s.ra.Len(); i++ {
-		if s.isDeleted(i) {
+		if s.deletedPoints[i] {
 			continue
 		}
 		dsq := s.ra.Vec3At(i).Sub(p).NormSq()
@@ -754,16 +760,11 @@ func (s *naiveSearch) RangeSearch(p mat.Vec3, maxRange float32) []int {
 	return ids
 }
 
-func (s *naiveSearch) isDeleted(id int) bool {
-	_, ok := s.deletedPoints[id]
-	return ok
-}
-
 func (s *naiveSearch) findMinimum(dim int) int {
 	id := -1
 	var min float32
 	for i := 0; i < s.ra.Len(); i++ {
-		if s.isDeleted(i) {
+		if s.deletedPoints[i] {
 			continue
 		}
 		p := s.ra.Vec3At(i)
@@ -827,7 +828,7 @@ func BenchmarkKDTree_Nearest(b *testing.B) {
 				b.Fatal(err)
 			}
 			kdt := New(it)
-			ns := &naiveSearch{ra: it, deletedPoints: map[int]bool{}}
+			ns := newNaiveSearch(it)
 
 			itTargets, err := targets.Vec3Iterator()
 			if err != nil {
