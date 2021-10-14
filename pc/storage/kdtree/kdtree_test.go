@@ -479,10 +479,60 @@ func TestKDtree(t *testing.T) {
 				{
 					pID:      -1,
 					hasError: true,
+					expectedTree: &KDTree{
+						Vec3RandomAccessor: it,
+						root: &node{
+							children: [2]*node{
+								&node{
+									children: [2]*node{
+										&node{id: 5, dim: 2},
+										&node{id: 1, dim: 2},
+									},
+									id:  4,
+									dim: 1,
+								},
+								&node{
+									children: [2]*node{
+										&node{id: 2, dim: 2},
+										&node{id: 6, dim: 2},
+									},
+									id:  0,
+									dim: 1,
+								},
+							},
+							id:  3,
+							dim: 0,
+						},
+					},
 				},
 				{
 					pID:      123,
 					hasError: true,
+					expectedTree: &KDTree{
+						Vec3RandomAccessor: it,
+						root: &node{
+							children: [2]*node{
+								&node{
+									children: [2]*node{
+										&node{id: 5, dim: 2},
+										&node{id: 1, dim: 2},
+									},
+									id:  4,
+									dim: 1,
+								},
+								&node{
+									children: [2]*node{
+										&node{id: 2, dim: 2},
+										&node{id: 6, dim: 2},
+									},
+									id:  0,
+									dim: 1,
+								},
+							},
+							id:  3,
+							dim: 0,
+						},
+					},
 				},
 			},
 		}
@@ -493,11 +543,8 @@ func TestKDtree(t *testing.T) {
 				for _, tt := range steps {
 					err := kdt.DeletePoint(tt.pID)
 					testKDT := tt.expectedTree
-					if tt.hasError {
-						if err == nil {
-							t.Errorf("Expected an error when trying to delete a point that is not in the tree")
-						}
-						testKDT = kdt
+					if tt.hasError && err == nil {
+						t.Errorf("Expected an error when trying to delete a point that is not in the tree")
 					}
 					if !kdtreeDeepExpectEqual(t, kdt, testKDT) {
 						t.Fatalf("Expected:\n%v\nGot:\n%v", testKDT, kdt)
