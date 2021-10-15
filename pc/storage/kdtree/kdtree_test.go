@@ -211,6 +211,108 @@ func TestKDtree(t *testing.T) {
 		}
 	})
 
+	t.Run("Range", func(t *testing.T) {
+		pp := &pc.PointCloud{
+			PointCloudHeader: pc.PointCloudHeader{
+				Fields: []string{"x", "y", "z"},
+				Size:   []int{4, 4, 4},
+				Type:   []string{"F", "F", "F"},
+				Count:  []int{1, 1, 1},
+				Width:  7,
+				Height: 1,
+			},
+			Points: 7,
+			Data:   make([]byte, 7*4*3),
+		}
+		it, err := pp.Vec3Iterator()
+		if err != nil {
+			t.Fatal(err)
+		}
+		it.SetVec3(mat.Vec3{0.0, 0.2, 0.0}) // 0
+		it.Incr()
+		it.SetVec3(mat.Vec3{3.0, 0.0, 0.0}) // 1
+		it.Incr()
+		it.SetVec3(mat.Vec3{0.2, 0.0, 0.0}) // 2
+		it.Incr()
+		it.SetVec3(mat.Vec3{0.0, 1.0, 0.0}) // 3
+		it.Incr()
+		it.SetVec3(mat.Vec3{0.0, 0.0, 5.0}) // 4
+		it.Incr()
+		it.SetVec3(mat.Vec3{0.5, 0.0, 0.0}) // 5
+		it.Incr()
+		it.SetVec3(mat.Vec3{0.0, 0.0, 0.4}) // 6
+
+		it, err = pp.Vec3Iterator()
+		if err != nil {
+			t.Fatal(err)
+		}
+		kdt := New(it)
+
+		testCases := []struct {
+			p        mat.Vec3
+			maxRange float32
+			ids      []int
+			dsqs     []float32
+		}{
+			{
+				p:        mat.Vec3{10, 10, 10},
+				maxRange: 1,
+				ids:      []int{},
+				dsqs:     []float32{},
+			},
+			{
+				p:        mat.Vec3{0, 0.2, 0},
+				maxRange: 0.05,
+				ids:      []int{0},
+				dsqs:     []float32{0.0},
+			},
+			{
+				p:        mat.Vec3{0, 0.2, 0},
+				maxRange: 0.3,
+				ids:      []int{0, 2},
+				dsqs:     []float32{0.0, 0.08},
+			},
+			{
+				p:        mat.Vec3{0, 0.2, 0},
+				maxRange: 0.45,
+				ids:      []int{0, 2, 6},
+				dsqs:     []float32{0.0, 0.08, 0.2},
+			},
+			{
+				p:        mat.Vec3{0, 0.2, 0},
+				maxRange: 0.6,
+				ids:      []int{0, 2, 6, 5},
+				dsqs:     []float32{0.0, 0.08, 0.2, 0.29},
+			},
+		}
+		const eps = 0.00001
+		for _, tt := range testCases {
+			tt := tt
+			t.Run(fmt.Sprintf(
+				"(%.1f,%.1f,%.1f)-%0.1f",
+				tt.p[0], tt.p[1], tt.p[2], tt.maxRange,
+			), func(t *testing.T) {
+				ids, dsqs := kdt.Range(tt.p, tt.maxRange)
+
+				if len(ids) != len(tt.ids) {
+					t.Fatalf("Expected: %d, got %d", len(tt.ids), len(ids))
+				}
+				if len(dsqs) != len(tt.dsqs) {
+					t.Fatalf("Expected: %d, got %d", len(tt.dsqs), len(dsqs))
+				}
+				if !reflect.DeepEqual(tt.ids, ids) {
+					t.Fatalf("Expected: %d, got %d", tt.ids, ids)
+				}
+
+				for i := 0; i < len(dsqs); i++ {
+					if dsqs[i] < tt.dsqs[i]-eps || tt.dsqs[i]+eps < dsqs[i] {
+						t.Errorf("Expected distance^2: %0.4f, got: %0.4f", tt.dsqs[i], dsqs[i])
+					}
+				}
+			})
+		}
+	})
+
 	t.Run("FindMinimum", func(t *testing.T) {
 		testCases := []struct {
 			dim    int
@@ -238,7 +340,6 @@ func TestKDtree(t *testing.T) {
 
 	t.Run("DeletePoint", func(t *testing.T) {
 		it := createTestPointCloud(t)
-		var kdt *KDTree
 		testCases := map[string][]struct {
 			pID          int
 			expectedTree *KDTree
@@ -540,7 +641,7 @@ func TestKDtree(t *testing.T) {
 		for name, steps := range testCases {
 			steps := steps
 			t.Run(name, func(t *testing.T) {
-				kdt = New(it)
+				kdt := New(it)
 				for _, tt := range steps {
 					err := kdt.DeletePoint(tt.pID)
 					testKDT := tt.expectedTree
@@ -687,7 +788,7 @@ func TestKDtree_DeletePoint_randomCloud(t *testing.T) {
 	testNearestRandomCloud(t, it, kdt, ns, nPoints, width)
 }
 
-func TestKDtree_RangeSearch_randomCloud(t *testing.T) {
+func TestKDtree_Range_randomCloud(t *testing.T) {
 	const (
 		nPoints = 100
 		width   = 10.0
@@ -704,15 +805,18 @@ func TestKDtree_RangeSearch_randomCloud(t *testing.T) {
 		p := randomPoint(width)
 		maxRange := rand.Float32() * width
 
-		idsNaive := ns.Range(p, maxRange)
-		sort.Ints(idsNaive)
-
-		idsKDTree := kdt.Range(p, maxRange)
-		sort.Ints(idsKDTree)
+		idsNaive, dsqsNaive := ns.Range(p, maxRange)
+		idsKDTree, dsqsKDTree := kdt.Range(p, maxRange)
 
 		if !reflect.DeepEqual(idsNaive, idsKDTree) {
 			t.Fatalf(
-				"%d %0.3f %s: Expected: %d, got %d", i, maxRange, p, idsNaive, idsKDTree,
+				"%d %0.3f %s: Expected: %v, got %v", i, maxRange, p, idsNaive, idsKDTree,
+			)
+		}
+
+		if !reflect.DeepEqual(dsqsNaive, dsqsKDTree) {
+			t.Fatalf(
+				"%d %0.3f %s: Expected: %v, got %v", i, maxRange, p, dsqsNaive, dsqsKDTree,
 			)
 		}
 	}
@@ -745,19 +849,21 @@ func (s *naiveSearch) Nearest(p mat.Vec3, maxRange float32) (int, float32) {
 	return id, dsq
 }
 
-func (s *naiveSearch) Range(p mat.Vec3, maxRange float32) []int {
+func (s *naiveSearch) Range(p mat.Vec3, maxRange float32) ([]int, []float32) {
 	dsqTh := maxRange * maxRange
-	ids := []int{}
+	nghs := newNeighbors()
+
 	for i := 0; i < s.ra.Len(); i++ {
 		if s.deletedPoints[i] {
 			continue
 		}
 		dsq := s.ra.Vec3At(i).Sub(p).NormSq()
 		if dsq < dsqTh {
-			ids = append(ids, i)
+			nghs.add(i, dsq)
 		}
 	}
-	return ids
+	sort.Sort(nghs)
+	return nghs.ids, nghs.dsqs
 }
 
 func (s *naiveSearch) findMinimum(dim int) int {
