@@ -23,14 +23,14 @@ func (c *NearestPointCorresponder) Pairs(base storage.Search, target pc.Vec3Rand
 	n := target.Len()
 	out := make([]PointToPointCorrespondence, 0, n)
 	for i := 0; i < n; i++ {
-		id, dsq := base.Nearest(target.Vec3At(i), c.MaxDist)
-		if id < 0 {
+		nn := base.Nearest(target.Vec3At(i), c.MaxDist)
+		if nn.ID < 0 {
 			continue
 		}
 		out = append(out, PointToPointCorrespondence{
-			BaseID:          id,
+			BaseID:          nn.ID,
 			TargetID:        i,
-			SquaredDistance: dsq,
+			SquaredDistance: nn.DistSq,
 		})
 	}
 	return out
