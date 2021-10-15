@@ -8,6 +8,7 @@ import (
 
 	"github.com/seqsense/pcgol/mat"
 	"github.com/seqsense/pcgol/pc"
+	"github.com/seqsense/pcgol/pc/storage"
 )
 
 type KDTree struct {
@@ -47,9 +48,9 @@ func (k *KDTree) newNodeArray(n0 *node) []*node {
 	return append(nodesBuf[:0], n0)
 }
 
-func (k *KDTree) Nearest(p mat.Vec3, maxRange float32) (int, float32) {
+func (k *KDTree) Nearest(p mat.Vec3, maxRange float32) storage.Neighbor {
 	if k.root == nil {
-		return -1, maxRange * maxRange
+		return storage.Neighbor{ID: -1, DistSq: maxRange * maxRange}
 	}
 	nodesOrig := k.newNodeArray(k.root)
 	defer k.poolNodeArray.Put(nodesOrig)
@@ -58,24 +59,28 @@ func (k *KDTree) Nearest(p mat.Vec3, maxRange float32) (int, float32) {
 	return k.nearestImpl(p, nodes, maxRange*maxRange)
 }
 
-func (k *KDTree) nearestImpl(p mat.Vec3, nodes []*node, maxRangeSq float32) (int, float32) {
+func (k *KDTree) nearestImpl(p mat.Vec3, nodes []*node, maxRangeSq float32) storage.Neighbor {
 	i := len(nodes) - 1
-	id := nodes[i].id
-	dsq := (k.Vec3At(id).Sub(p)).NormSq()
-	if dsq > maxRangeSq {
-		id, dsq = -1, maxRangeSq
+	neighbor1 := storage.Neighbor{
+		ID:     nodes[i].id,
+		DistSq: (k.Vec3At(nodes[i].id).Sub(p)).NormSq(),
+	}
+	if neighbor1.DistSq > maxRangeSq {
+		neighbor1.ID = -1
+		neighbor1.DistSq = maxRangeSq
 	}
 	for j := i - 1; j >= 0; j-- {
 		pivot := k.Vec3At(nodes[j].id)
 		dim := nodes[j].dim
 		fromPivot := p[dim] - pivot[dim]
 		fromPivotSq := fromPivot * fromPivot
-		if fromPivotSq > dsq {
+		if fromPivotSq > neighbor1.DistSq {
 			continue
 		}
 		dsqPivot := (pivot.Sub(p)).NormSq()
-		if dsqPivot < dsq {
-			id, dsq = nodes[j].id, dsqPivot
+		if dsqPivot < neighbor1.DistSq {
+			neighbor1.ID = nodes[j].id
+			neighbor1.DistSq = dsqPivot
 		}
 		var nextNode *node
 		if nodes[j].children[0] == nodes[j+1] {
@@ -89,66 +94,53 @@ func (k *KDTree) nearestImpl(p mat.Vec3, nodes []*node, maxRangeSq float32) (int
 
 		nodesOrig := k.newNodeArray(nextNode)
 		ns := k.searchLeafNode(p, nodesOrig)
-		id2, dsq2 := k.nearestImpl(p, ns, dsq)
+		neighbor2 := k.nearestImpl(p, ns, neighbor1.DistSq)
 		k.poolNodeArray.Put(nodesOrig)
-		if id2 >= 0 {
-			id, dsq = id2, dsq2
+		if neighbor2.ID >= 0 {
+			neighbor1.ID = neighbor2.ID
+			neighbor1.DistSq = neighbor2.DistSq
 		}
 	}
-	return id, dsq
+	return neighbor1
 }
 
-type neighbors struct {
-	ids  []int
-	dsqs []float32
+type neighborSorter struct {
+	neighbors []storage.Neighbor
 }
 
-func newNeighbors() *neighbors {
-	return &neighbors{
-		ids:  []int{},
-		dsqs: []float32{},
-	}
+func (ns *neighborSorter) Len() int {
+	return len(ns.neighbors)
 }
 
-func (nghs *neighbors) add(id int, dsq float32) {
-	nghs.ids = append(nghs.ids, id)
-	nghs.dsqs = append(nghs.dsqs, dsq)
+func (ns *neighborSorter) Swap(i, j int) {
+	ns.neighbors[i], ns.neighbors[j] = ns.neighbors[j], ns.neighbors[i]
 }
 
-func (nghs *neighbors) Len() int {
-	return len(nghs.ids)
+func (ns *neighborSorter) Less(i, j int) bool {
+	return ns.neighbors[i].DistSq < ns.neighbors[j].DistSq
 }
 
-func (nghs *neighbors) Swap(i, j int) {
-	nghs.ids[i], nghs.ids[j] = nghs.ids[j], nghs.ids[i]
-	nghs.dsqs[i], nghs.dsqs[j] = nghs.dsqs[j], nghs.dsqs[i]
-}
-
-func (nghs *neighbors) Less(i, j int) bool {
-	return nghs.dsqs[i] < nghs.dsqs[j]
-}
-
-func (k *KDTree) Range(p mat.Vec3, maxRange float32) ([]int, []float32) {
-	nghs := newNeighbors()
+func (k *KDTree) Range(p mat.Vec3, maxRange float32) []storage.Neighbor {
+	neighbors := []storage.Neighbor{}
 	if k.root == nil {
-		return nghs.ids, nghs.dsqs
+		return neighbors
 	}
 	nodesOrig := k.newNodeArray(k.root)
 	defer k.poolNodeArray.Put(nodesOrig)
 
 	nodes := k.searchLeafNode(p, nodesOrig)
-	k.rangeImpl(p, nodes, maxRange*maxRange, nghs)
+	k.rangeImpl(p, nodes, maxRange*maxRange, &neighbors)
 
-	sort.Sort(nghs)
-	return nghs.ids, nghs.dsqs
+	sort.Sort(&neighborSorter{neighbors: neighbors})
+	return neighbors
 }
 
-func (k *KDTree) rangeImpl(p mat.Vec3, nodes []*node, maxRangeSq float32, nghs *neighbors) {
+func (k *KDTree) rangeImpl(p mat.Vec3, nodes []*node, maxRangeSq float32, neighbors *[]storage.Neighbor) {
 	i := len(nodes) - 1
 	id := nodes[i].id
 	dsq := (k.Vec3At(id).Sub(p)).NormSq()
 	if dsq < maxRangeSq {
-		nghs.add(id, dsq)
+		*neighbors = append(*neighbors, storage.Neighbor{ID: id, DistSq: dsq})
 	}
 	for j := i - 1; j >= 0; j-- {
 		pivot := k.Vec3At(nodes[j].id)
@@ -160,7 +152,7 @@ func (k *KDTree) rangeImpl(p mat.Vec3, nodes []*node, maxRangeSq float32, nghs *
 		}
 		dsqPivot := (pivot.Sub(p)).NormSq()
 		if dsqPivot < maxRangeSq {
-			nghs.add(nodes[j].id, dsqPivot)
+			*neighbors = append(*neighbors, storage.Neighbor{ID: nodes[j].id, DistSq: dsqPivot})
 		}
 		var nextNode *node
 		if nodes[j].children[0] == nodes[j+1] {
@@ -174,7 +166,7 @@ func (k *KDTree) rangeImpl(p mat.Vec3, nodes []*node, maxRangeSq float32, nghs *
 
 		nodesOrig := k.newNodeArray(nextNode)
 		ns := k.searchLeafNode(p, nodesOrig)
-		k.rangeImpl(p, ns, maxRangeSq, nghs)
+		k.rangeImpl(p, ns, maxRangeSq, neighbors)
 		k.poolNodeArray.Put(nodesOrig)
 	}
 }

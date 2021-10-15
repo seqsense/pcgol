@@ -200,12 +200,12 @@ func TestKDtree(t *testing.T) {
 				"(%.1f,%.1f,%.1f)-%0.1f",
 				tt.p[0], tt.p[1], tt.p[2], tt.maxRange,
 			), func(t *testing.T) {
-				i, dsq := kdt.Nearest(tt.p, tt.maxRange)
-				if i != tt.nodeID {
-					t.Errorf("Expected id: %d, got: %d", tt.nodeID, i)
+				neighbor := kdt.Nearest(tt.p, tt.maxRange)
+				if neighbor.ID != tt.nodeID {
+					t.Errorf("Expected id: %d, got: %d", tt.nodeID, neighbor.ID)
 				}
-				if dsq < tt.distSq-eps || tt.distSq+eps < dsq {
-					t.Errorf("Expected distance^2: %0.4f, got: %0.4f", tt.distSq, dsq)
+				if neighbor.DistSq < tt.distSq-eps || tt.distSq+eps < neighbor.DistSq {
+					t.Errorf("Expected distance^2: %0.4f, got: %0.4f", tt.distSq, neighbor.DistSq)
 				}
 			})
 		}
@@ -249,40 +249,48 @@ func TestKDtree(t *testing.T) {
 		kdt := New(it)
 
 		testCases := []struct {
-			p        mat.Vec3
-			maxRange float32
-			ids      []int
-			dsqs     []float32
+			p         mat.Vec3
+			maxRange  float32
+			neighbors []storage.Neighbor
 		}{
 			{
-				p:        mat.Vec3{10, 10, 10},
-				maxRange: 1,
-				ids:      []int{},
-				dsqs:     []float32{},
+				p:         mat.Vec3{10, 10, 10},
+				maxRange:  1,
+				neighbors: []storage.Neighbor{},
 			},
 			{
 				p:        mat.Vec3{0, 0.2, 0},
 				maxRange: 0.05,
-				ids:      []int{0},
-				dsqs:     []float32{0.0},
+				neighbors: []storage.Neighbor{
+					storage.Neighbor{ID: 0, DistSq: 0.0},
+				},
 			},
 			{
 				p:        mat.Vec3{0, 0.2, 0},
 				maxRange: 0.3,
-				ids:      []int{0, 2},
-				dsqs:     []float32{0.0, 0.08},
+				neighbors: []storage.Neighbor{
+					storage.Neighbor{ID: 0, DistSq: 0.0},
+					storage.Neighbor{ID: 2, DistSq: 0.08},
+				},
 			},
 			{
 				p:        mat.Vec3{0, 0.2, 0},
 				maxRange: 0.45,
-				ids:      []int{0, 2, 6},
-				dsqs:     []float32{0.0, 0.08, 0.2},
+				neighbors: []storage.Neighbor{
+					storage.Neighbor{ID: 0, DistSq: 0.0},
+					storage.Neighbor{ID: 2, DistSq: 0.08},
+					storage.Neighbor{ID: 6, DistSq: 0.2},
+				},
 			},
 			{
 				p:        mat.Vec3{0, 0.2, 0},
 				maxRange: 0.6,
-				ids:      []int{0, 2, 6, 5},
-				dsqs:     []float32{0.0, 0.08, 0.2, 0.29},
+				neighbors: []storage.Neighbor{
+					storage.Neighbor{ID: 0, DistSq: 0.0},
+					storage.Neighbor{ID: 2, DistSq: 0.08},
+					storage.Neighbor{ID: 6, DistSq: 0.2},
+					storage.Neighbor{ID: 5, DistSq: 0.29},
+				},
 			},
 		}
 		const eps = 0.00001
@@ -292,21 +300,18 @@ func TestKDtree(t *testing.T) {
 				"(%.1f,%.1f,%.1f)-%0.1f",
 				tt.p[0], tt.p[1], tt.p[2], tt.maxRange,
 			), func(t *testing.T) {
-				ids, dsqs := kdt.Range(tt.p, tt.maxRange)
+				neighbors := kdt.Range(tt.p, tt.maxRange)
 
-				if len(ids) != len(tt.ids) {
-					t.Fatalf("Expected: %d, got %d", len(tt.ids), len(ids))
-				}
-				if len(dsqs) != len(tt.dsqs) {
-					t.Fatalf("Expected: %d, got %d", len(tt.dsqs), len(dsqs))
-				}
-				if !reflect.DeepEqual(tt.ids, ids) {
-					t.Fatalf("Expected: %d, got %d", tt.ids, ids)
+				if len(tt.neighbors) != len(neighbors) {
+					t.Fatalf("Expected number of neighbors: %d, got %d", len(tt.neighbors), len(neighbors))
 				}
 
-				for i := 0; i < len(dsqs); i++ {
-					if dsqs[i] < tt.dsqs[i]-eps || tt.dsqs[i]+eps < dsqs[i] {
-						t.Errorf("Expected distance^2: %0.4f, got: %0.4f", tt.dsqs[i], dsqs[i])
+				for i := 0; i < len(neighbors); i++ {
+					if tt.neighbors[i].ID != neighbors[i].ID {
+						t.Fatalf("Expected ID: %d, got %d", tt.neighbors[i].ID, neighbors[i].ID)
+					}
+					if neighbors[i].DistSq < tt.neighbors[i].DistSq-eps || tt.neighbors[i].DistSq+eps < neighbors[i].DistSq {
+						t.Errorf("Expected distance^2: %0.4f, got: %0.4f", tt.neighbors[i].DistSq, neighbors[i].DistSq)
 					}
 				}
 			})
@@ -702,20 +707,22 @@ func testNearestRandomCloud(t *testing.T, it pc.Vec3Iterator, k *KDTree, ns *nai
 		p := randomPoint(width)
 		maxRange := rand.Float32() * width
 
-		idNaive, dsqNaive := ns.Nearest(p, maxRange)
-		idKDTree, dsqKDTree := k.Nearest(p, maxRange)
+		neighborNaive := ns.Nearest(p, maxRange)
+		neighborKDTree := k.Nearest(p, maxRange)
+
 		strNaive := ""
-		if idNaive >= 0 {
-			strNaive = it.Vec3At(idNaive).String()
+		if neighborNaive.ID >= 0 {
+			strNaive = it.Vec3At(neighborNaive.ID).String()
 		}
 		strKDTree := ""
-		if idKDTree >= 0 {
-			strKDTree = it.Vec3At(idKDTree).String()
+		if neighborKDTree.ID >= 0 {
+			strKDTree = it.Vec3At(neighborKDTree.ID).String()
 		}
-		if idNaive != idKDTree || dsqNaive != dsqKDTree {
+		if neighborNaive.ID != neighborKDTree.ID || neighborNaive.DistSq != neighborKDTree.DistSq {
 			t.Fatalf(
 				"%d %0.3f %s: Expected: %d %0.3f %s, got: %d %0.3f %s",
-				i, maxRange, p, idNaive, dsqNaive, strNaive, idKDTree, dsqKDTree, strKDTree,
+				i, maxRange, p, neighborNaive.ID, neighborNaive.DistSq,
+				strNaive, neighborKDTree.ID, neighborKDTree.DistSq, strKDTree,
 			)
 		}
 	}
@@ -805,18 +812,12 @@ func TestKDtree_Range_randomCloud(t *testing.T) {
 		p := randomPoint(width)
 		maxRange := rand.Float32() * width
 
-		idsNaive, dsqsNaive := ns.Range(p, maxRange)
-		idsKDTree, dsqsKDTree := kdt.Range(p, maxRange)
+		neighborsNaive := ns.Range(p, maxRange)
+		neighborsKDTree := kdt.Range(p, maxRange)
 
-		if !reflect.DeepEqual(idsNaive, idsKDTree) {
+		if !reflect.DeepEqual(neighborsNaive, neighborsKDTree) {
 			t.Fatalf(
-				"%d %0.3f %s: Expected: %v, got %v", i, maxRange, p, idsNaive, idsKDTree,
-			)
-		}
-
-		if !reflect.DeepEqual(dsqsNaive, dsqsKDTree) {
-			t.Fatalf(
-				"%d %0.3f %s: Expected: %v, got %v", i, maxRange, p, dsqsNaive, dsqsKDTree,
+				"%d %0.3f %s: Expected: %v, got %v", i, maxRange, p, neighborsNaive, neighborsKDTree,
 			)
 		}
 	}
@@ -834,7 +835,7 @@ func newNaiveSearch(ra pc.Vec3RandomAccessor) *naiveSearch {
 	}
 }
 
-func (s *naiveSearch) Nearest(p mat.Vec3, maxRange float32) (int, float32) {
+func (s *naiveSearch) Nearest(p mat.Vec3, maxRange float32) storage.Neighbor {
 	dsq := maxRange * maxRange
 	id := -1
 	for i := 0; i < s.ra.Len(); i++ {
@@ -846,12 +847,12 @@ func (s *naiveSearch) Nearest(p mat.Vec3, maxRange float32) (int, float32) {
 			id, dsq = i, dsq1
 		}
 	}
-	return id, dsq
+	return storage.Neighbor{ID: id, DistSq: dsq}
 }
 
-func (s *naiveSearch) Range(p mat.Vec3, maxRange float32) ([]int, []float32) {
+func (s *naiveSearch) Range(p mat.Vec3, maxRange float32) []storage.Neighbor {
 	dsqTh := maxRange * maxRange
-	nghs := newNeighbors()
+	neighbors := []storage.Neighbor{}
 
 	for i := 0; i < s.ra.Len(); i++ {
 		if s.deletedPoints[i] {
@@ -859,11 +860,11 @@ func (s *naiveSearch) Range(p mat.Vec3, maxRange float32) ([]int, []float32) {
 		}
 		dsq := s.ra.Vec3At(i).Sub(p).NormSq()
 		if dsq < dsqTh {
-			nghs.add(i, dsq)
+			neighbors = append(neighbors, storage.Neighbor{ID: i, DistSq: dsq})
 		}
 	}
-	sort.Sort(nghs)
-	return nghs.ids, nghs.dsqs
+	sort.Sort(&neighborSorter{neighbors: neighbors})
+	return neighbors
 }
 
 func (s *naiveSearch) findMinimum(dim int) int {
@@ -944,13 +945,13 @@ func BenchmarkKDTree_Nearest(b *testing.B) {
 			b.Run("KDTree", func(b *testing.B) {
 				for i := 0; i < b.N; i++ {
 					target := itTargets.Vec3At(i % nTargets)
-					_, _ = kdt.Nearest(target, width)
+					_ = kdt.Nearest(target, width)
 				}
 			})
 			b.Run("Naive", func(b *testing.B) {
 				for i := 0; i < b.N; i++ {
 					target := itTargets.Vec3At(i % nTargets)
-					_, _ = ns.Nearest(target, width)
+					_ = ns.Nearest(target, width)
 				}
 			})
 		})
