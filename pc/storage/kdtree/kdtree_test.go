@@ -863,7 +863,7 @@ func (s *naiveSearch) Range(p mat.Vec3, maxRange float32) []storage.Neighbor {
 			neighbors = append(neighbors, storage.Neighbor{ID: i, DistSq: dsq})
 		}
 	}
-	sort.Sort(&neighborSorter{neighbors: neighbors})
+	sort.Sort(neighborSorter(neighbors))
 	return neighbors
 }
 

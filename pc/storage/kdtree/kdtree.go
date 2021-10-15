@@ -114,7 +114,7 @@ func (k *KDTree) Range(p mat.Vec3, maxRange float32) []storage.Neighbor {
 	nodes := k.searchLeafNode(p, nodesOrig)
 	k.rangeImpl(p, nodes, maxRange*maxRange, &neighbors)
 
-	sort.Sort(&neighborSorter{neighbors: neighbors})
+	sort.Sort(neighborSorter(neighbors))
 	return neighbors
 }
 
@@ -363,18 +363,16 @@ func (s *indiceSorter) Swap(i, j int) {
 	s.indice[i], s.indice[j] = s.indice[j], s.indice[i]
 }
 
-type neighborSorter struct {
-	neighbors []storage.Neighbor
+type neighborSorter []storage.Neighbor
+
+func (ns neighborSorter) Len() int {
+	return len(ns)
 }
 
-func (ns *neighborSorter) Len() int {
-	return len(ns.neighbors)
+func (ns neighborSorter) Swap(i, j int) {
+	ns[i], ns[j] = ns[j], ns[i]
 }
 
-func (ns *neighborSorter) Swap(i, j int) {
-	ns.neighbors[i], ns.neighbors[j] = ns.neighbors[j], ns.neighbors[i]
-}
-
-func (ns *neighborSorter) Less(i, j int) bool {
-	return ns.neighbors[i].DistSq < ns.neighbors[j].DistSq
+func (ns neighborSorter) Less(i, j int) bool {
+	return ns[i].DistSq < ns[j].DistSq
 }
