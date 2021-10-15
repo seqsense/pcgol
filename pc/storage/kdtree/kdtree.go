@@ -104,22 +104,6 @@ func (k *KDTree) nearestImpl(p mat.Vec3, nodes []*node, maxRangeSq float32) stor
 	return neighbor1
 }
 
-type neighborSorter struct {
-	neighbors []storage.Neighbor
-}
-
-func (ns *neighborSorter) Len() int {
-	return len(ns.neighbors)
-}
-
-func (ns *neighborSorter) Swap(i, j int) {
-	ns.neighbors[i], ns.neighbors[j] = ns.neighbors[j], ns.neighbors[i]
-}
-
-func (ns *neighborSorter) Less(i, j int) bool {
-	return ns.neighbors[i].DistSq < ns.neighbors[j].DistSq
-}
-
 func (k *KDTree) Range(p mat.Vec3, maxRange float32) []storage.Neighbor {
 	neighbors := []storage.Neighbor{}
 	if k.root == nil {
@@ -234,20 +218,6 @@ func (k *KDTree) findMinimumImpl(n *node, dim int, depth int) (int, error) {
 	return minNode(dim, n.id, min0, min1), nil
 }
 
-func (k *KDTree) stringImpl(n *node, depth int) string {
-	if n != nil {
-		s := k.stringImpl(n.children[1], depth+1)
-		s += fmt.Sprintf(strings.Repeat(" ", 10*depth)+"-> (%d,%d) %v\n", n.id, n.dim, k.Vec3At(n.id))
-		s += k.stringImpl(n.children[0], depth+1)
-		return s
-	}
-	return ""
-}
-
-func (k *KDTree) String() string {
-	return k.stringImpl(k.root, 0)
-}
-
 func (k *KDTree) deleteNodeImpl(n *node, pID int, depth int) (*node, error) {
 	if n == nil {
 		return nil, nil
@@ -311,6 +281,20 @@ func (k *KDTree) DeletePoint(pID int) error {
 	}
 	k.root = n
 	return nil
+}
+
+func (k *KDTree) stringImpl(n *node, depth int) string {
+	if n != nil {
+		s := k.stringImpl(n.children[1], depth+1)
+		s += fmt.Sprintf(strings.Repeat(" ", 10*depth)+"-> (%d,%d) %v\n", n.id, n.dim, k.Vec3At(n.id))
+		s += k.stringImpl(n.children[0], depth+1)
+		return s
+	}
+	return ""
+}
+
+func (k *KDTree) String() string {
+	return k.stringImpl(k.root, 0)
 }
 
 func newNode(ra pc.Vec3RandomAccessor, indice []int, depth int) *node {
@@ -378,4 +362,20 @@ func (s *indiceSorter) Less(i, j int) bool {
 
 func (s *indiceSorter) Swap(i, j int) {
 	s.indice[i], s.indice[j] = s.indice[j], s.indice[i]
+}
+
+type neighborSorter struct {
+	neighbors []storage.Neighbor
+}
+
+func (ns *neighborSorter) Len() int {
+	return len(ns.neighbors)
+}
+
+func (ns *neighborSorter) Swap(i, j int) {
+	ns.neighbors[i], ns.neighbors[j] = ns.neighbors[j], ns.neighbors[i]
+}
+
+func (ns *neighborSorter) Less(i, j int) bool {
+	return ns.neighbors[i].DistSq < ns.neighbors[j].DistSq
 }
