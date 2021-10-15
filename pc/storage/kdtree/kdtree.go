@@ -97,8 +97,7 @@ func (k *KDTree) nearestImpl(p mat.Vec3, nodes []*node, maxRangeSq float32) stor
 		neighbor2 := k.nearestImpl(p, ns, neighbor1.DistSq)
 		k.poolNodeArray.Put(nodesOrig)
 		if neighbor2.ID >= 0 {
-			neighbor1.ID = neighbor2.ID
-			neighbor1.DistSq = neighbor2.DistSq
+			neighbor1 = neighbor2
 		}
 	}
 	return neighbor1
