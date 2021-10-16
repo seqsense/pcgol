@@ -2,6 +2,7 @@ package icp
 
 import (
 	"fmt"
+	"math"
 	"testing"
 
 	"github.com/seqsense/pcgol/mat"
@@ -90,6 +91,46 @@ func TestPointToPointICPGradient(t *testing.T) {
 						t.Errorf("Expected transform:\n%v\nGot:\n%v\n(residual: %f)", delta.Inv(), trans, residual)
 					}
 				})
+			}
+		})
+	}
+}
+
+func BenchmarkPointToPointICPGradient(b *testing.B) {
+	for _, nPoints := range []int{1024, 4096, 16384} {
+		base := make(pc.Vec3Slice, nPoints)
+		width := int(math.Sqrt(float64(nPoints)))
+		res := 10.0 / float32(width)
+		for i := range base {
+			// 10x10 ground with 2x2x1 surface
+			base[i][0] = res*float32(i/width) - 5
+			base[i][1] = res*float32(i%width) - 5
+			if -1 < base[i][0] && base[i][0] < 1 &&
+				-1 < base[i][1] && base[i][1] < 1 {
+				base[i][2] = 1
+			} else {
+				base[i][2] = 0
+			}
+		}
+		target := make(pc.Vec3Slice, nPoints)
+		for i := range target {
+			target[i] = base[i].Add(mat.Vec3{0.5, 0.3, -0.2})
+		}
+		ppicp := &PointToPointICPGradient{
+			Evaluator: &PointToPointEvaluator{
+				Corresponder: &NearestPointCorresponder{MaxDist: 2},
+				MinPairs:     3,
+			},
+			GradientThreshold: mat.Vec6{-1, -1, -1, -1, -1, -1}, // don't exit iteration until reaching MaxIteration
+			MaxIteration:      10,
+		}
+		kdt := kdtree.New(base)
+		b.Run(fmt.Sprintf("Points%d", nPoints), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				_, _, err := ppicp.Fit(kdt, target)
+				if err != nil {
+					b.Fatal(err)
+				}
 			}
 		})
 	}
