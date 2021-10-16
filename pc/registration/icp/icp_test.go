@@ -121,8 +121,10 @@ func BenchmarkPointToPointICPGradient(b *testing.B) {
 				Corresponder: &NearestPointCorresponder{MaxDist: 2},
 				MinPairs:     3,
 			},
-			GradientThreshold: mat.Vec6{-1, -1, -1, -1, -1, -1}, // don't exit iteration until reaching MaxIteration
-			MaxIteration:      10,
+			UpdaterFactory: &GradientDescentUpdaterFactory{
+				Threshold:    mat.Vec6{-1, -1, -1, -1, -1, -1}, // don't exit iteration until reaching MaxIteration
+				MaxIteration: 10,
+			},
 		}
 		kdt := kdtree.New(base)
 		b.Run(fmt.Sprintf("Points%d", nPoints), func(b *testing.B) {
