@@ -59,6 +59,63 @@ func createTestPointCloud(t *testing.T) pc.Vec3Iterator {
 	return it
 }
 
+func TestNode_maxDepth(t *testing.T) {
+	testCases := map[string]struct {
+		ra       pc.Vec3RandomAccessor
+		expected int
+	}{
+		"Depth=2": {
+			ra: pc.Vec3Slice{
+				{4, 1, 0}, {2, 2, 1},
+			},
+			//  n
+			//  |
+			//  n  maxDepth=2
+			expected: 2,
+		},
+		"Depth=2,Balanced": {
+			ra: pc.Vec3Slice{
+				{4, 1, 0}, {2, 2, 1}, {5, 0, 0},
+			},
+			//     n
+			//    / \
+			//   n   n  maxDepth=2
+			expected: 2,
+		},
+		"Depth=3": {
+			ra: pc.Vec3Slice{
+				{4, 1, 0}, {2, 2, 1}, {5, 0, 0}, {3, 0, 0}, {0, 1, 0}, {1, 0, 0},
+			},
+			//     n
+			//    / \
+			//   n   n
+			//  / \  |
+			// n   n n  maxDepth=3
+			expected: 3,
+		},
+		"Depth=3,Balanced": {
+			ra: pc.Vec3Slice{
+				{4, 1, 0}, {2, 2, 1}, {5, 0, 0}, {3, 0, 0}, {0, 1, 0}, {1, 0, 0}, {6, 2, 1},
+			},
+			//      n
+			//    /   \
+			//   n     n
+			//  / \   / \
+			// n   n n   n maxDepth=3
+			expected: 3,
+		},
+	}
+	for name, tt := range testCases {
+		tt := tt
+		t.Run(name, func(t *testing.T) {
+			kdt := New(tt.ra)
+			if d := kdt.root.maxDepth(0); d != tt.expected {
+				t.Errorf("Expected max depth: %d, got: %d\n%s", tt.expected, d, kdt)
+			}
+		})
+	}
+}
+
 func kdtreeDeepExpectEqual(t *testing.T, a, b *KDTree) bool {
 	t.Helper()
 	return reflect.DeepEqual(a.root, b.root) && reflect.DeepEqual(a.Vec3RandomAccessor, b.Vec3RandomAccessor)

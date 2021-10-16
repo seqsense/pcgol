@@ -340,9 +340,9 @@ func (n *node) maxDepth(depth int) int {
 	d0 := n.children[0].maxDepth(depth + 1)
 	d1 := n.children[1].maxDepth(depth + 1)
 	if d0 > d1 {
-		return d1
+		return d0
 	}
-	return d0
+	return d1
 }
 
 type indiceSorter struct {
