@@ -67,6 +67,7 @@ func TestPointToPointICPGradient(t *testing.T) {
 						target[i] = delta.Transform(base.Vec3At(id))
 					}
 					kdt := kdtree.New(base)
+					kdt.MinDistSq = 0.01
 					ppicp := &PointToPointICPGradient{
 						Evaluator: &PointToPointEvaluator{
 							Corresponder: &NearestPointCorresponder{MaxDist: 2},
@@ -124,7 +125,9 @@ func BenchmarkPointToPointICPGradient(b *testing.B) {
 			GradientThreshold: mat.Vec6{-1, -1, -1, -1, -1, -1}, // don't exit iteration until reaching MaxIteration
 			MaxIteration:      10,
 		}
-		kdt := kdtree.New(base)
+		kdt := kdtree.New(base, func(k *kdtree.KDTree) {
+			k.MinDistSq = res * res
+		})
 		b.Run(fmt.Sprintf("Points%d", nPoints), func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				_, _, err := ppicp.Fit(kdt, target)
