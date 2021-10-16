@@ -16,6 +16,8 @@ type KDTree struct {
 	root *node
 
 	poolNodeArray *sync.Pool
+
+	MinDistSq float32
 }
 
 type node struct {
@@ -24,14 +26,16 @@ type node struct {
 	dim      int
 }
 
-func New(ra pc.Vec3RandomAccessor) *KDTree {
+type KDTreeOption func(*KDTree)
+
+func New(ra pc.Vec3RandomAccessor, opts ...KDTreeOption) *KDTree {
 	ids := make([]int, ra.Len())
 	for i := 0; i < ra.Len(); i++ {
 		ids[i] = i
 	}
 	root := newNode(ra, ids, 0)
 	maxDepth := root.maxDepth(0)
-	return &KDTree{
+	kdt := &KDTree{
 		Vec3RandomAccessor: ra,
 		root:               root,
 
@@ -41,6 +45,10 @@ func New(ra pc.Vec3RandomAccessor) *KDTree {
 			},
 		},
 	}
+	for _, o := range opts {
+		o(kdt)
+	}
+	return kdt
 }
 
 func (k *KDTree) newNodeArray(n0 *node) []*node {
@@ -69,6 +77,9 @@ func (k *KDTree) nearestImpl(p mat.Vec3, nodes []*node, maxRangeSq float32) stor
 		neighbor1.ID = -1
 		neighbor1.DistSq = maxRangeSq
 	}
+	if neighbor1.DistSq < k.MinDistSq {
+		return neighbor1
+	}
 	for j := i - 1; j >= 0; j-- {
 		pivot := k.Vec3At(nodes[j].id)
 		dim := nodes[j].dim
@@ -81,6 +92,9 @@ func (k *KDTree) nearestImpl(p mat.Vec3, nodes []*node, maxRangeSq float32) stor
 		if dsqPivot < neighbor1.DistSq {
 			neighbor1.ID = nodes[j].id
 			neighbor1.DistSq = dsqPivot
+			if neighbor1.DistSq < k.MinDistSq {
+				break
+			}
 		}
 		var nextNode *node
 		if nodes[j].children[0] == nodes[j+1] {
@@ -98,6 +112,9 @@ func (k *KDTree) nearestImpl(p mat.Vec3, nodes []*node, maxRangeSq float32) stor
 		k.poolNodeArray.Put(nodesOrig)
 		if neighbor2.ID >= 0 {
 			neighbor1 = neighbor2
+			if neighbor1.DistSq < k.MinDistSq {
+				break
+			}
 		}
 	}
 	return neighbor1
@@ -126,9 +143,10 @@ func (k *KDTree) rangeImpl(p mat.Vec3, nodes []*node, maxRangeSq float32, neighb
 		*neighbors = append(*neighbors, storage.Neighbor{ID: id, DistSq: dsq})
 	}
 	for j := i - 1; j >= 0; j-- {
-		pivot := k.Vec3At(nodes[j].id)
-		dim := nodes[j].dim
-		fromPivot := p[dim] - pivot[dim]
+		nj := nodes[j]
+
+		pivot := k.Vec3At(nj.id)
+		fromPivot := p[nj.dim] - pivot[nj.dim]
 		fromPivotSq := fromPivot * fromPivot
 		if fromPivotSq > maxRangeSq {
 			continue
@@ -138,10 +156,10 @@ func (k *KDTree) rangeImpl(p mat.Vec3, nodes []*node, maxRangeSq float32, neighb
 			*neighbors = append(*neighbors, storage.Neighbor{ID: nodes[j].id, DistSq: dsqPivot})
 		}
 		var nextNode *node
-		if nodes[j].children[0] == nodes[j+1] {
-			nextNode = nodes[j].children[1]
+		if nj.children[0] == nodes[j+1] {
+			nextNode = nj.children[1]
 		} else {
-			nextNode = nodes[j].children[0]
+			nextNode = nj.children[0]
 		}
 		if nextNode == nil {
 			continue
@@ -157,22 +175,21 @@ func (k *KDTree) rangeImpl(p mat.Vec3, nodes []*node, maxRangeSq float32, neighb
 func (k *KDTree) searchLeafNode(p mat.Vec3, base []*node) []*node {
 	i := len(base) - 1
 	parent := base[i]
-	pivotVal, val := k.Vec3At(parent.id)[parent.dim], p[parent.dim]
 
 	child0, child1 := parent.children[0], parent.children[1]
 	switch {
 	case child0 == nil && child1 == nil:
 		return base
 	case child0 == nil:
-		base = append(base, child1)
+		return k.searchLeafNode(p, append(base, child1))
 	case child1 == nil:
-		base = append(base, child0)
-	case pivotVal > val:
-		base = append(base, child0)
-	default:
-		base = append(base, child1)
+		return k.searchLeafNode(p, append(base, child0))
 	}
-	return k.searchLeafNode(p, base)
+
+	if k.Vec3At(parent.id)[parent.dim] > p[parent.dim] {
+		return k.searchLeafNode(p, append(base, child0))
+	}
+	return k.searchLeafNode(p, append(base, child1))
 }
 
 func (k *KDTree) findMinimumImpl(n *node, dim int, depth int) (int, error) {
