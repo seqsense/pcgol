@@ -112,15 +112,20 @@ func (e *PointToPointEvaluator) Evaluate(base storage.Search, target pc.Vec3Rand
 		weightFn = DefaultEvaluateWeightFn
 	}
 
-	pairVecs := [2]pc.Vec3RandomAccessor{
-		make(pc.Vec3Slice, len(pairs)),
-		make(pc.Vec3Slice, len(pairs)),
+	var pairVecs [2]pc.Vec3RandomAccessor
+	if debugPlot {
+		pairVecs = [2]pc.Vec3RandomAccessor{
+			make(pc.Vec3Slice, len(pairs)),
+			make(pc.Vec3Slice, len(pairs)),
+		}
 	}
 	for i, pair := range pairs {
 		pb := base.Vec3At(pair.BaseID)
 		pt := target.Vec3At(pair.TargetID)
-		pairVecs[0].(pc.Vec3Slice)[i] = pb
-		pairVecs[1].(pc.Vec3Slice)[i] = pt
+		if debugPlot {
+			pairVecs[0].(pc.Vec3Slice)[i] = pb
+			pairVecs[1].(pc.Vec3Slice)[i] = pt
+		}
 
 		w := weightFn(pair.SquaredDistance)
 
