@@ -154,6 +154,99 @@ func TestKDtree(t *testing.T) {
 		t.Fatalf("Expected:\n%v\nGot:\n%v", expectedTree, kdt)
 	}
 
+	for _, minDist := range []float32{0, 0.001} {
+		kdt2 := kdt.With(func(k *KDTree) {
+			k.MinDistSq = minDist * minDist
+		})
+		t.Run(fmt.Sprintf("MinDist=%0.3f", minDist), func(t *testing.T) {
+			t.Run("Nearest", func(t *testing.T) {
+				testCases := []struct {
+					p        mat.Vec3
+					nodeID   int
+					distSq   float32
+					maxRange float32
+				}{
+					{
+						p:        mat.Vec3{5, 0, 0},
+						nodeID:   2,
+						distSq:   0,
+						maxRange: 1.0,
+					},
+					{
+						p:        mat.Vec3{5, 0, 0.1},
+						nodeID:   2,
+						distSq:   0.1 * 0.1,
+						maxRange: 1.0,
+					},
+					{
+						p:        mat.Vec3{4.9, 0.0, 0.0},
+						nodeID:   2,
+						distSq:   0.1 * 0.1,
+						maxRange: 1.0,
+					},
+					{
+						p:        mat.Vec3{3, 0, 0},
+						nodeID:   3,
+						distSq:   0,
+						maxRange: 1.0,
+					},
+					{
+						p:        mat.Vec3{3, 0, 0.1},
+						nodeID:   3,
+						distSq:   0.1 * 0.1,
+						maxRange: 1.0,
+					},
+					{
+						p:        mat.Vec3{2.1, 1.9, 1},
+						nodeID:   1,
+						distSq:   2 * 0.1 * 0.1,
+						maxRange: 1.0,
+					},
+					{
+						p:        mat.Vec3{2.1, 2.1, 1},
+						nodeID:   1,
+						distSq:   2 * 0.1 * 0.1,
+						maxRange: 1.0,
+					},
+					{
+						p:        mat.Vec3{3.9, 1, 0},
+						nodeID:   0,
+						distSq:   0.1 * 0.1,
+						maxRange: 1.0,
+					},
+					{
+						p:        mat.Vec3{4.1, 1, 0},
+						nodeID:   0,
+						distSq:   0.1 * 0.1,
+						maxRange: 1.0,
+					},
+					{
+						p:        mat.Vec3{4.2, 1, 0},
+						nodeID:   -1,
+						distSq:   0.1 * 0.1,
+						maxRange: 0.1,
+					},
+				}
+				const eps = 0.00001
+				for _, tt := range testCases {
+					tt := tt
+					t.Run(fmt.Sprintf(
+						"(%.1f,%.1f,%.1f)-%0.1f",
+						tt.p[0], tt.p[1], tt.p[2], tt.maxRange,
+					), func(t *testing.T) {
+						neighbor := kdt2.Nearest(tt.p, tt.maxRange)
+						if neighbor.ID != tt.nodeID {
+							t.Errorf("Expected id: %d, got: %d", tt.nodeID, neighbor.ID)
+						}
+						if neighbor.DistSq < tt.distSq-eps || tt.distSq+eps < neighbor.DistSq {
+							t.Errorf("Expected distance^2: %0.4f, got: %0.4f", tt.distSq, neighbor.DistSq)
+						}
+					})
+				}
+			})
+		})
+	}
+
 	t.Run("SearchNode", func(t *testing.T) {
 		testCases := []struct {
 			p      mat.Vec3
@@ -178,91 +271,6 @@ func TestKDtree(t *testing.T) {
 				n := kdt.searchLeafNode(tt.p, []*node{kdt.root})
 				if n[len(n)-1].id != tt.nodeID {
 					t.Errorf("Expected node.id: %d, got: %d", tt.nodeID, n[len(n)-1].id)
-				}
-			})
-		}
-	})
-	t.Run("Nearest", func(t *testing.T) {
-		testCases := []struct {
-			p        mat.Vec3
-			nodeID   int
-			distSq   float32
-			maxRange float32
-		}{
-			{
-				p:        mat.Vec3{5, 0, 0},
-				nodeID:   2,
-				distSq:   0,
-				maxRange: 1.0,
-			},
-			{
-				p:        mat.Vec3{5, 0, 0.1},
-				nodeID:   2,
-				distSq:   0.1 * 0.1,
-				maxRange: 1.0,
-			},
-			{
-				p:        mat.Vec3{4.9, 0.0, 0.0},
-				nodeID:   2,
-				distSq:   0.1 * 0.1,
-				maxRange: 1.0,
-			},
-			{
-				p:        mat.Vec3{3, 0, 0},
-				nodeID:   3,
-				distSq:   0,
-				maxRange: 1.0,
-			},
-			{
-				p:        mat.Vec3{3, 0, 0.1},
-				nodeID:   3,
-				distSq:   0.1 * 0.1,
-				maxRange: 1.0,
-			},
-			{
-				p:        mat.Vec3{2.1, 1.9, 1},
-				nodeID:   1,
-				distSq:   2 * 0.1 * 0.1,
-				maxRange: 1.0,
-			},
-			{
-				p:        mat.Vec3{2.1, 2.1, 1},
-				nodeID:   1,
-				distSq:   2 * 0.1 * 0.1,
-				maxRange: 1.0,
-			},
-			{
-				p:        mat.Vec3{3.9, 1, 0},
-				nodeID:   0,
-				distSq:   0.1 * 0.1,
-				maxRange: 1.0,
-			},
-			{
-				p:        mat.Vec3{4.1, 1, 0},
-				nodeID:   0,
-				distSq:   0.1 * 0.1,
-				maxRange: 1.0,
-			},
-			{
-				p:        mat.Vec3{4.2, 1, 0},
-				nodeID:   -1,
-				distSq:   0.1 * 0.1,
-				maxRange: 0.1,
-			},
-		}
-		const eps = 0.00001
-		for _, tt := range testCases {
-			tt := tt
-			t.Run(fmt.Sprintf(
-				"(%.1f,%.1f,%.1f)-%0.1f",
-				tt.p[0], tt.p[1], tt.p[2], tt.maxRange,
-			), func(t *testing.T) {
-				neighbor := kdt.Nearest(tt.p, tt.maxRange)
-				if neighbor.ID != tt.nodeID {
-					t.Errorf("Expected id: %d, got: %d", tt.nodeID, neighbor.ID)
-				}
-				if neighbor.DistSq < tt.distSq-eps || tt.distSq+eps < neighbor.DistSq {
-					t.Errorf("Expected distance^2: %0.4f, got: %0.4f", tt.distSq, neighbor.DistSq)
 				}
 			})
 		}
@@ -982,35 +990,45 @@ func BenchmarkKDTree_Nearest(b *testing.B) {
 		width    = 10.0
 		nTargets = 100
 	)
-	for _, nPoints := range []int{100, 1000, 10000, 100000} {
-		b.Run(fmt.Sprintf("%dpoints", nPoints), func(b *testing.B) {
-			pp := generateRandomCloud(b, nPoints, width)
-			targets := generateRandomCloud(b, nTargets, width)
+	for _, minDistSq := range []float32{0, 0.1, 0.01} {
+		minDistSq := minDistSq
+		b.Run(fmt.Sprintf("minDistSq=%0.2f", minDistSq), func(b *testing.B) {
+			for _, nPoints := range []int{100, 1000, 10000, 100000} {
+				b.Run(fmt.Sprintf("%dpoints", nPoints), func(b *testing.B) {
+					pp := generateRandomCloud(b, nPoints, width)
+					targets := generateRandomCloud(b, nTargets, width)
 
-			it, err := pp.Vec3Iterator()
-			if err != nil {
-				b.Fatal(err)
+					it, err := pp.Vec3Iterator()
+					if err != nil {
+						b.Fatal(err)
+					}
+					kdt := New(it, func(k *KDTree) {
+						k.MinDistSq = minDistSq
+					})
+					ns := newNaiveSearch(it)
+
+					itTargets, err := targets.Vec3Iterator()
+					if err != nil {
+						b.Fatal(err)
+					}
+
+					b.Run("KDTree", func(b *testing.B) {
+						for i := 0; i < b.N; i++ {
+							target := itTargets.Vec3At(i % nTargets)
+							_ = kdt.Nearest(target, width)
+						}
+					})
+					b.Run("Naive", func(b *testing.B) {
+						if minDistSq != 0 {
+							b.SkipNow()
+						}
+						for i := 0; i < b.N; i++ {
+							target := itTargets.Vec3At(i % nTargets)
+							_ = ns.Nearest(target, width)
+						}
+					})
+				})
 			}
-			kdt := New(it)
-			ns := newNaiveSearch(it)
-
-			itTargets, err := targets.Vec3Iterator()
-			if err != nil {
-				b.Fatal(err)
-			}
-
-			b.Run("KDTree", func(b *testing.B) {
-				for i := 0; i < b.N; i++ {
-					target := itTargets.Vec3At(i % nTargets)
-					_ = kdt.Nearest(target, width)
-				}
-			})
-			b.Run("Naive", func(b *testing.B) {
-				for i := 0; i < b.N; i++ {
-					target := itTargets.Vec3At(i % nTargets)
-					_ = ns.Nearest(target, width)
-				}
-			})
 		})
 	}
 }
