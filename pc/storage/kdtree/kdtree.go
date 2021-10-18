@@ -282,13 +282,16 @@ func (k *KDTree) deleteNodeImpl(n *node, pID int, depth int) (*node, error) {
 
 	pointAtNode := k.Vec3At(n.id)
 	p := k.Vec3At(pID)
-	if p[n.dim] < pointAtNode[n.dim] {
+
+	if p[n.dim] <= pointAtNode[n.dim] {
 		child, err := k.deleteNodeImpl(n.children[0], pID, depth+1)
 		if err != nil {
 			return nil, err
 		}
 		n.children[0] = child
-	} else {
+	}
+
+	if p[n.dim] >= pointAtNode[n.dim] {
 		child, err := k.deleteNodeImpl(n.children[1], pID, depth+1)
 		if err != nil {
 			return nil, err
