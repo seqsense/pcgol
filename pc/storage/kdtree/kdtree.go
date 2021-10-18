@@ -17,6 +17,8 @@ type KDTree struct {
 
 	poolNodeArray *sync.Pool
 
+	// Squared distance to cut the search branch.
+	// If this value is larger than zero, Nearest will be approximated search.
 	MinDistSq float32
 }
 
