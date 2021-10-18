@@ -40,9 +40,10 @@ func (r *RegionGrowing) Segment(p mat.Vec3, maxRange float32) []int {
 	for len(next) > 0 {
 		var id int
 		id, next = next[0], next[1:]
-		if r.propertyIter.Uint32At(id) == targetVal {
-			indice = append(indice, id)
+		if r.propertyIter.Uint32At(id) != targetVal {
+			continue
 		}
+		indice = append(indice, id)
 		neighbors := r.Range(r.Vec3At(id), maxRange)
 		for _, neighbor := range neighbors {
 			if ok := toVisit[neighbor.ID]; !ok {
