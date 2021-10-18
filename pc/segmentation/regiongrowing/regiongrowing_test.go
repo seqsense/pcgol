@@ -9,6 +9,7 @@ import (
 
 	"github.com/seqsense/pcgol/mat"
 	"github.com/seqsense/pcgol/pc"
+	"github.com/seqsense/pcgol/pc/storage/kdtree"
 )
 
 func TestRegionGrowingSegment(t *testing.T) {
@@ -153,7 +154,8 @@ func TestRegionGrowingSegment(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			rg := New(it, lt)
+			kdt := kdtree.New(it)
+			rg := New(kdt, lt)
 
 			indice := rg.Segment(tt.p, tt.maxRange)
 			sort.Ints(indice)
