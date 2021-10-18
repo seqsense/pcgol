@@ -69,6 +69,9 @@ func TestVec3RandomSampleIterator(t *testing.T) {
 			count := make(map[int]int, n)
 			for _, v := range sampled {
 				count[int(v[0])]++
+				if v[0] < 0 || float32(tt.n) <= v[0] || v[1] != 0 || v[2] != 0 {
+					t.Fatalf("Nonexistent point is sampled: %v", v)
+				}
 			}
 			for _, c := range count {
 				if c > 1 {
