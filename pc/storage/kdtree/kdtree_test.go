@@ -989,35 +989,45 @@ func BenchmarkKDTree_Nearest(b *testing.B) {
 		width    = 10.0
 		nTargets = 100
 	)
-	for _, nPoints := range []int{100, 1000, 10000, 100000} {
-		b.Run(fmt.Sprintf("%dpoints", nPoints), func(b *testing.B) {
-			pp := generateRandomCloud(b, nPoints, width)
-			targets := generateRandomCloud(b, nTargets, width)
+	for _, minDistSq := range []float32{0, 0.1, 0.01} {
+		minDistSq := minDistSq
+		b.Run(fmt.Sprintf("minDistSq=%0.2f", minDistSq), func(b *testing.B) {
+			for _, nPoints := range []int{100, 1000, 10000, 100000} {
+				b.Run(fmt.Sprintf("%dpoints", nPoints), func(b *testing.B) {
+					pp := generateRandomCloud(b, nPoints, width)
+					targets := generateRandomCloud(b, nTargets, width)
 
-			it, err := pp.Vec3Iterator()
-			if err != nil {
-				b.Fatal(err)
+					it, err := pp.Vec3Iterator()
+					if err != nil {
+						b.Fatal(err)
+					}
+					kdt := New(it, func(k *KDTree) {
+						k.MinDistSq = minDistSq
+					})
+					ns := newNaiveSearch(it)
+
+					itTargets, err := targets.Vec3Iterator()
+					if err != nil {
+						b.Fatal(err)
+					}
+
+					b.Run("KDTree", func(b *testing.B) {
+						for i := 0; i < b.N; i++ {
+							target := itTargets.Vec3At(i % nTargets)
+							_ = kdt.Nearest(target, width)
+						}
+					})
+					b.Run("Naive", func(b *testing.B) {
+						if minDistSq != 0 {
+							b.SkipNow()
+						}
+						for i := 0; i < b.N; i++ {
+							target := itTargets.Vec3At(i % nTargets)
+							_ = ns.Nearest(target, width)
+						}
+					})
+				})
 			}
-			kdt := New(it)
-			ns := newNaiveSearch(it)
-
-			itTargets, err := targets.Vec3Iterator()
-			if err != nil {
-				b.Fatal(err)
-			}
-
-			b.Run("KDTree", func(b *testing.B) {
-				for i := 0; i < b.N; i++ {
-					target := itTargets.Vec3At(i % nTargets)
-					_ = kdt.Nearest(target, width)
-				}
-			})
-			b.Run("Naive", func(b *testing.B) {
-				for i := 0; i < b.N; i++ {
-					target := itTargets.Vec3At(i % nTargets)
-					_ = ns.Nearest(target, width)
-				}
-			})
 		})
 	}
 }
