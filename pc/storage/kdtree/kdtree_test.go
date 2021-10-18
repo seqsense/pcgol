@@ -268,9 +268,11 @@ func TestKDtree(t *testing.T) {
 		for _, tt := range testCases {
 			tt := tt
 			t.Run(fmt.Sprintf("(%.0f,%.0f,%.0f)", tt.p[0], tt.p[1], tt.p[2]), func(t *testing.T) {
-				n := kdt.searchLeafNode(tt.p, []*node{kdt.root})
-				if n[len(n)-1].id != tt.nodeID {
-					t.Errorf("Expected node.id: %d, got: %d", tt.nodeID, n[len(n)-1].id)
+				nodes := kdt.newNodeStack(kdt.root)
+				defer nodes.cleanup()
+				nodes.searchLeafNode(tt.p)
+				if id := nodes.nn[len(nodes.nn)-1].id; id != tt.nodeID {
+					t.Errorf("Expected node.id: %d, got: %d", tt.nodeID, id)
 				}
 			})
 		}
