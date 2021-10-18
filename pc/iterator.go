@@ -32,10 +32,18 @@ type Float32Iterator interface {
 
 type Vec3Iterator interface {
 	Vec3RandomAccessor
+	Vec3ForwardIterator
+}
+
+type Vec3ForwardIterator interface {
+	Vec3ConstForwardIterator
+	SetVec3(mat.Vec3)
+}
+
+type Vec3ConstForwardIterator interface {
 	Incr()
 	IsValid() bool
 	Vec3() mat.Vec3
-	SetVec3(mat.Vec3)
 }
 
 type binaryFloat32Iterator struct {
