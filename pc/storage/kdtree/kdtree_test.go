@@ -717,6 +717,28 @@ func TestKDtree(t *testing.T) {
 			})
 		}
 	})
+
+	t.Run("DeletePointTreeWithAllPointsOnALine", func(t *testing.T) {
+		var it pc.Vec3RandomAccessor = pc.Vec3Slice{
+			mat.Vec3{4, 0, 0},
+			mat.Vec3{1, 0, 0},
+			mat.Vec3{2, 0, 0},
+			mat.Vec3{3, 0, 0},
+		}
+
+		kdt := New(it)
+		for i := 0; i < it.Len(); i++ {
+			p := it.Vec3At(i)
+			err := kdt.DeletePoint(i)
+			if err != nil {
+				t.Fatal(err)
+			}
+			n := kdt.Nearest(p, 0.001)
+			if n.ID >= 0 {
+				t.Fatalf("%d, %v was not deleted\n", i, p)
+			}
+		}
+	})
 }
 
 func ExampleKDTree_String() {
