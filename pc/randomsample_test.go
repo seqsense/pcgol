@@ -6,44 +6,64 @@ import (
 
 func TestVec3RandomSampleIterator(t *testing.T) {
 	testCases := map[string]struct {
-		n        int
-		ratio    float32
-		expected int
+		n         int
+		ratio     float32
+		expected  int
+		tolerance int
 	}{
+		"10000x0.0": {
+			n:         10000,
+			ratio:     0.0,
+			expected:  0,
+			tolerance: 0,
+		},
 		"10000x0.1": {
-			n:        10000,
-			ratio:    0.1,
-			expected: 1000,
+			n:         10000,
+			ratio:     0.1,
+			expected:  1000,
+			tolerance: 100,
 		},
 		"10000x0.5": {
-			n:        10000,
-			ratio:    0.5,
-			expected: 5000,
+			n:         10000,
+			ratio:     0.5,
+			expected:  5000,
+			tolerance: 100,
 		},
 		"10000x0.75": {
-			n:        10000,
-			ratio:    0.75,
-			expected: 7500,
+			n:         10000,
+			ratio:     0.75,
+			expected:  7500,
+			tolerance: 100,
 		},
 		"10000x0.9": {
-			n:        10000,
-			ratio:    0.9,
-			expected: 9000,
+			n:         10000,
+			ratio:     0.9,
+			expected:  9000,
+			tolerance: 100,
+		},
+		"10000x1.0": {
+			n:         10000,
+			ratio:     1.0,
+			expected:  10000,
+			tolerance: 0,
 		},
 		"100000x0.01": {
-			n:        100000,
-			ratio:    0.01,
-			expected: 1000,
+			n:         100000,
+			ratio:     0.01,
+			expected:  1000,
+			tolerance: 500,
 		},
 		"100000x0.1": {
-			n:        100000,
-			ratio:    0.1,
-			expected: 10000,
+			n:         100000,
+			ratio:     0.1,
+			expected:  10000,
+			tolerance: 500,
 		},
 		"100000x0.5": {
-			n:        100000,
-			ratio:    0.5,
-			expected: 50000,
+			n:         100000,
+			ratio:     0.5,
+			expected:  50000,
+			tolerance: 500,
 		},
 	}
 	for name, tt := range testCases {
@@ -60,9 +80,8 @@ func TestVec3RandomSampleIterator(t *testing.T) {
 				sampled = append(sampled, it.Vec3())
 			}
 
-			tolerance := tt.n / 100
 			n := len(sampled)
-			if n < tt.expected-tolerance || tt.expected+tolerance < n {
+			if n < tt.expected-tt.tolerance || tt.expected+tt.tolerance < n {
 				t.Fatalf("Expected %d samples, got %d", tt.expected, n)
 			}
 
@@ -80,4 +99,5 @@ func TestVec3RandomSampleIterator(t *testing.T) {
 			}
 		})
 	}
+
 }
