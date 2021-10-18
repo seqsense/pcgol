@@ -53,6 +53,15 @@ func New(ra pc.Vec3RandomAccessor, opts ...KDTreeOption) *KDTree {
 	return kdt
 }
 
+// With creates shallow copy of KDTree with specified options.
+func (k *KDTree) With(opts ...KDTreeOption) *KDTree {
+	k2 := *k
+	for _, o := range opts {
+		o(&k2)
+	}
+	return &k2
+}
+
 func (k *KDTree) newNodeArray(n0 *node) []*node {
 	nodesBuf := k.poolNodeArray.Get().([]*node)
 	return append(nodesBuf[:0], n0)
