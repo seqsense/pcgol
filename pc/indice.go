@@ -23,3 +23,23 @@ func NewIndiceVec3RandomAccessor(ra Vec3RandomAccessor, indice []int) Vec3Random
 		indice: indice,
 	}
 }
+
+type indiceUint32RandomAccessor struct {
+	indice []int
+	ra     Uint32RandomAccessor
+}
+
+func (i *indiceUint32RandomAccessor) Len() int {
+	return len(i.indice)
+}
+
+func (i *indiceUint32RandomAccessor) Uint32At(j int) uint32 {
+	return i.ra.Uint32At(i.indice[j])
+}
+
+func NewIndiceUint32RandomAccessor(ra Uint32RandomAccessor, indice []int) Uint32RandomAccessor {
+	return &indiceUint32RandomAccessor{
+		ra:     ra,
+		indice: indice,
+	}
+}
