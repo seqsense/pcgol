@@ -34,7 +34,7 @@ func TestSAC(t *testing.T) {
 	m := NewVoxelGridSurfaceModel(vg, pp)
 
 	s := New(NewRandomSampler(len(pp)), m)
-	if ok := s.Compute(50); !ok {
+	if ok := s.Compute(30); !ok {
 		t.Fatal("SAC.Compute should succeed")
 	}
 
