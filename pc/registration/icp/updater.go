@@ -53,25 +53,17 @@ func (u *gradientDescentUpdater) Update(trans mat.Mat4, ev *Evaluated) (mat.Mat4
 		return trans, true
 	}
 
-	delta := mat.Vec6{
-		u.f.Weight[0] * ev.Gradient[dX],
-		u.f.Weight[1] * ev.Gradient[dY],
-		u.f.Weight[2] * ev.Gradient[dZ],
-		u.f.Weight[3] * ev.Gradient[dWx],
-		u.f.Weight[4] * ev.Gradient[dWy],
-		u.f.Weight[5] * ev.Gradient[dWz],
-	}
 	factorIter := -(1 - (float32(u.i) / float32(u.f.MaxIteration)))
-	deltaTrans := mat.Translate(
-		factorIter*delta[0],
-		factorIter*delta[1],
-		factorIter*delta[2],
-	)
-	deltaRot := rodriguesToRotation(mat.Vec3{
-		factorIter * delta[3],
-		factorIter * delta[4],
-		factorIter * delta[5],
-	})
+	delta := mat.Vec6{
+		factorIter * u.f.Weight[0] * ev.Gradient[dX],
+		factorIter * u.f.Weight[1] * ev.Gradient[dY],
+		factorIter * u.f.Weight[2] * ev.Gradient[dZ],
+		factorIter * u.f.Weight[3] * ev.Gradient[dWx],
+		factorIter * u.f.Weight[4] * ev.Gradient[dWy],
+		factorIter * u.f.Weight[5] * ev.Gradient[dWz],
+	}
+	deltaTrans := mat.Translate(delta[0], delta[1], delta[2])
+	deltaRot := rodriguesToRotation(mat.Vec3{delta[3], delta[4], delta[5]})
 
 	trans = deltaTrans.Mul(deltaRot.Mul(trans))
 	u.i++
