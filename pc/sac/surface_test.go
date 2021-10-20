@@ -6,21 +6,12 @@ import (
 	"testing"
 
 	"github.com/seqsense/pcgol/mat"
+	"github.com/seqsense/pcgol/pc"
 	"github.com/seqsense/pcgol/pc/storage/voxelgrid"
 )
 
-type dummyPointCloud []mat.Vec3
-
-func (p dummyPointCloud) Vec3At(i int) mat.Vec3 {
-	return p[i]
-}
-
-func (p dummyPointCloud) Len() int {
-	return len(p)
-}
-
 func TestVoxelGridSurfaceModel(t *testing.T) {
-	pc0 := dummyPointCloud{
+	pc0 := pc.Vec3Slice{
 		mat.Vec3{0.0, 0.0, 0.0},
 		mat.Vec3{0.1, 0.0, 0.1},
 		mat.Vec3{0.2, 0.0, 0.2},
@@ -32,7 +23,7 @@ func TestVoxelGridSurfaceModel(t *testing.T) {
 		mat.Vec3{0.1, 0.2, 0.1},
 		mat.Vec3{0.2, 0.2, 0.2},
 	}
-	pc1 := dummyPointCloud{
+	pc1 := pc.Vec3Slice{
 		mat.Vec3{0.0, 0.0, 0.0},
 		mat.Vec3{0.1, 0.0, 0.1},
 		mat.Vec3{0.2, 0.0, 0.2},
@@ -47,7 +38,7 @@ func TestVoxelGridSurfaceModel(t *testing.T) {
 
 	for name, tt := range map[string]struct {
 		origin mat.Vec3
-		pp     dummyPointCloud
+		pp     pc.Vec3Slice
 	}{
 		"Zero_XZ": {
 			origin: mat.Vec3{0, 0, 0},
