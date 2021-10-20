@@ -152,12 +152,11 @@ func (i naiveVec3Iterator) SetVec3(v mat.Vec3) {
 }
 
 type Uint32Iterator interface {
+	Uint32RandomAccessor
 	Incr()
 	IsValid() bool
 	Uint32() uint32
 	SetUint32(uint32)
-	Uint32At(int) uint32
-	Len() int
 }
 
 type binaryUint32Iterator struct {

@@ -10,10 +10,10 @@ const initialSliceCap = 8192
 
 type RegionGrowing struct {
 	search       storage.Search
-	propertyIter pc.Uint32Iterator
+	propertyIter pc.Uint32RandomAccessor
 }
 
-func New(search storage.Search, propertyIter pc.Uint32Iterator) *RegionGrowing {
+func New(search storage.Search, propertyIter pc.Uint32RandomAccessor) *RegionGrowing {
 	return &RegionGrowing{
 		search:       search,
 		propertyIter: propertyIter,
