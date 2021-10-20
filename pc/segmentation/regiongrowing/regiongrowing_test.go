@@ -26,28 +26,35 @@ func TestRegionGrowingSegment(t *testing.T) {
 		return points
 	}
 
+	const (
+		objectFloor = iota
+		objectBox1
+		objectBox2
+		objectBox3
+	)
+
 	objects := []*struct {
 		pos    mat.Vec3
 		points pc.Vec3Slice
 		label  uint32
 		indice []int
 	}{
-		{ // floor
+		objectFloor: {
 			pos:    mat.Vec3{0, 0, 0},
 			points: createBoxPoints(2, 2, 0.01, 0.1),
 			label:  0,
 		},
-		{ // box1
+		objectBox1: {
 			pos:    mat.Vec3{0, 0, 0.25},
 			points: createBoxPoints(0.5, 0.5, 0.5, 0.1),
 			label:  1,
 		},
-		{ // box2
+		objectBox2: {
 			pos:    mat.Vec3{0, 0.6, 0.4},
 			points: createBoxPoints(0.3, 0.3, 0.8, 0.1),
 			label:  1,
 		},
-		{ // box3
+		objectBox3: {
 			pos:    mat.Vec3{1.5, 0, 0.25},
 			points: createBoxPoints(0.25, 0.25, 0.5, 0.05),
 			label:  2,
@@ -111,32 +118,32 @@ func TestRegionGrowingSegment(t *testing.T) {
 		"Label0": {
 			p:        mat.Vec3{0.5, 0.1, 0},
 			maxRange: 0.15,
-			indice:   objects[0].indice,
+			indice:   objects[objectFloor].indice,
 		},
 		"Label1FirstBox": {
 			p:        mat.Vec3{0.25, 0.15, 0.15},
 			maxRange: 0.15,
-			indice:   objects[1].indice,
+			indice:   objects[objectBox1].indice,
 		},
 		"Label1SecondBox": {
 			p:        mat.Vec3{0, 0.45, 0.4},
 			maxRange: 0.15,
-			indice:   objects[2].indice,
+			indice:   objects[objectBox2].indice,
 		},
 		"Label1BothBoxes": {
 			p:        mat.Vec3{0, 0.45, 0.4},
 			maxRange: 0.3,
-			indice:   append(objects[1].indice, objects[2].indice...),
+			indice:   append(objects[objectBox1].indice, objects[objectBox2].indice...),
 		},
 		"Label3": {
 			p:        mat.Vec3{1.4, 0.125, 0.2},
 			maxRange: 0.15,
-			indice:   objects[3].indice,
+			indice:   objects[objectBox3].indice,
 		},
 		"StillOnlyLabel3": {
 			p:        mat.Vec3{1.4, 0.125, 0.2},
 			maxRange: 0.5,
-			indice:   objects[3].indice,
+			indice:   objects[objectBox3].indice,
 		},
 	}
 
