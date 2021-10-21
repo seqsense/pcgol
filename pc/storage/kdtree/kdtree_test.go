@@ -904,12 +904,40 @@ func TestKDtree_Range_randomCloud(t *testing.T) {
 		neighborsNaive := ns.Range(p, maxRange)
 		neighborsKDTree := kdt.Range(p, maxRange)
 
+		for i := 1; i < len(neighborsKDTree); i++ {
+			if neighborsKDTree[i].DistSq < neighborsKDTree[i-1].DistSq {
+				t.Fatalf("Neighbors are not sorted")
+			}
+		}
+
+		// Random cloud may have same distance points.
+		// Sort by both DistSq and ID to make test stable.
+		sort.Sort(neighborIDSorter(neighborsNaive))
+		sort.Sort(neighborIDSorter(neighborsKDTree))
+
 		if !reflect.DeepEqual(neighborsNaive, neighborsKDTree) {
 			t.Fatalf(
 				"%d %0.3f %s: Expected: %v, got %v", i, maxRange, p, neighborsNaive, neighborsKDTree,
 			)
 		}
 	}
+}
+
+type neighborIDSorter []storage.Neighbor
+
+func (ns neighborIDSorter) Len() int {
+	return len(ns)
+}
+
+func (ns neighborIDSorter) Swap(i, j int) {
+	ns[i], ns[j] = ns[j], ns[i]
+}
+
+func (ns neighborIDSorter) Less(i, j int) bool {
+	if ns[i].DistSq == ns[j].DistSq {
+		return ns[i].ID < ns[j].ID
+	}
+	return ns[i].DistSq < ns[j].DistSq
 }
 
 type naiveSearch struct {
