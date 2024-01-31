@@ -32,7 +32,7 @@ jobs:
             -race -v \
             -coverprofile=cover.out -covermode atomic -coverpkg ./...
       - name: Upload coverage report
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           file: ./cover.out
   test-wasm:
@@ -70,7 +70,7 @@ jobs:
             -exec=${HOME}/.local/bin/go_js_wasm_exec \
             -coverprofile=cover.out -covermode atomic -coverpkg ./...
       - name: Upload coverage report
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           file: ./cover.out
   tidy:
