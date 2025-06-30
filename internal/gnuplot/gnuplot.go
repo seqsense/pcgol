@@ -32,7 +32,6 @@ func NewWithCommand(args ...string) (Gnuplot, error) {
 	if err != nil {
 		return nil, err
 	}
-	println("init")
 
 	g := &gnuplot{
 		cmd: cmd,
@@ -40,23 +39,14 @@ func NewWithCommand(args ...string) (Gnuplot, error) {
 	}
 	g.wg.Add(2)
 	go func() {
-		println("output stdout")
-		if _, err := io.Copy(os.Stdout, cout); err != nil {
-			panic(err.Error())
-		}
-		println("/output stdout")
+		io.Copy(os.Stdout, cout)
 		g.wg.Done()
 	}()
 	go func() {
-		println("output stderr")
-		if _, err := io.Copy(os.Stderr, cerr); err != nil {
-			panic(err.Error())
-		}
-		println("/output stderr")
+		io.Copy(os.Stderr, cerr)
 		g.wg.Done()
 	}()
 
-	println("starting")
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}
@@ -68,10 +58,7 @@ func NewWithCommand(args ...string) (Gnuplot, error) {
 }
 
 func (g *gnuplot) Write(s string) {
-	println("writing")
-	if _, err := g.w.Write([]byte(s + "\n")); err != nil {
-		panic(err.Error())
-	}
+	g.w.Write([]byte(s + "\n"))
 }
 
 func (g *gnuplot) Splot(pp ...Plot) {
@@ -87,7 +74,6 @@ func (g *gnuplot) Splot(pp ...Plot) {
 }
 
 func (g *gnuplot) Close() {
-	println("closing")
 	g.w.Close()
 	g.wg.Wait()
 	g.cmd.Wait()
