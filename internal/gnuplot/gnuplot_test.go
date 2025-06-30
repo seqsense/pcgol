@@ -32,7 +32,7 @@ func ExampleGnuplot() {
 		&PointPairsPlot{Points: [2]pc.Vec3RandomAccessor{pp1, pp2}},
 	)
 
-	time.Sleep(10 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	g.Close()
 
 	// Output:
