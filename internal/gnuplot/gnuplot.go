@@ -75,6 +75,6 @@ func (g *gnuplot) Splot(pp ...Plot) {
 
 func (g *gnuplot) Close() {
 	g.w.Close()
-	g.cmd.Wait()
 	g.wg.Wait()
+	g.cmd.Wait()
 }
