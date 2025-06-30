@@ -41,13 +41,17 @@ func NewWithCommand(args ...string) (Gnuplot, error) {
 	g.wg.Add(2)
 	go func() {
 		println("output stdout")
-		io.Copy(os.Stdout, cout)
+		if _, err := io.Copy(os.Stdout, cout); err != nil {
+			panic(err.Error())
+		}
 		println("/output stdout")
 		g.wg.Done()
 	}()
 	go func() {
 		println("output stderr")
-		io.Copy(os.Stderr, cerr)
+		if _, err := io.Copy(os.Stderr, cerr); err != nil {
+			panic(err.Error())
+		}
 		println("/output stderr")
 		g.wg.Done()
 	}()
@@ -65,8 +69,7 @@ func NewWithCommand(args ...string) (Gnuplot, error) {
 
 func (g *gnuplot) Write(s string) {
 	println("writing")
-	_, err := g.w.Write([]byte(s + "\n"))
-	if err != nil {
+	if _, err := g.w.Write([]byte(s + "\n")); err != nil {
 		panic(err.Error())
 	}
 }
