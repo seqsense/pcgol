@@ -41,7 +41,7 @@ jobs:
       - name: Upload coverage report
         uses: codecov/codecov-action@v5
         with:
-          file: ./cover.out
+          files: ./cover.out
   test-wasm:
     runs-on: ubuntu-latest
     strategy:
