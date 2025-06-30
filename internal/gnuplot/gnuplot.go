@@ -65,7 +65,10 @@ func NewWithCommand(args ...string) (Gnuplot, error) {
 
 func (g *gnuplot) Write(s string) {
 	println("writing")
-	g.w.Write([]byte(s + "\n"))
+	_, err := g.w.Write([]byte(s + "\n"))
+	if err != nil {
+		panic(err.Error())
+	}
 }
 
 func (g *gnuplot) Splot(pp ...Plot) {
