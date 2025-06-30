@@ -65,13 +65,14 @@ jobs:
         with:
           node-version: '22'
       - name: Get go_js_wasm_exec
+        env:
+          GO_BASE_URL: "https://raw.githubusercontent.com/golang/go/refs/heads/release-branch.go${{ matrix.go }}"
         run: |
           mkdir -p ${HOME}/.local/bin
-          go_base_url=https://raw.githubusercontent.com/golang/go/refs/heads/release-branch.go${{ matrix.go }}
-          wget ${go_base_url}/lib/wasm/go_js_wasm_exec -O ${HOME}/.local/bin/go_js_wasm_exec \
-            || wget ${go_base_url}/misc/wasm/go_js_wasm_exec -O ${HOME}/.local/bin/go_js_wasm_exec
-          wget ${go_base_url}/lib/wasm/wasm_exec.js -O ${HOME}/.local/bin/wasm_exec.js \
-            || wget ${go_base_url}/misc/wasm/wasm_exec.js -O ${HOME}/.local/bin/wasm_exec.js
+          wget ${GO_BASE_URL}/lib/wasm/go_js_wasm_exec -O ${HOME}/.local/bin/go_js_wasm_exec \
+            || wget ${GO_BASE_URL}/misc/wasm/go_js_wasm_exec -O ${HOME}/.local/bin/go_js_wasm_exec
+          wget ${GO_BASE_URL}/lib/wasm/wasm_exec_node.js -O ${HOME}/.local/bin/wasm_exec_node.js \
+            || wget ${GO_BASE_URL}/misc/wasm/wasm_exec.js -O ${HOME}/.local/bin/wasm_exec.js
           chmod +x ${HOME}/.local/bin/go_js_wasm_exec
       - name: Run go test
         run: |
