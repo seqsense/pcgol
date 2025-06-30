@@ -71,8 +71,10 @@ jobs:
           mkdir -p ${HOME}/.local/bin
           wget ${GO_BASE_URL}/lib/wasm/go_js_wasm_exec -O ${HOME}/.local/bin/go_js_wasm_exec \
             || wget ${GO_BASE_URL}/misc/wasm/go_js_wasm_exec -O ${HOME}/.local/bin/go_js_wasm_exec
-          wget ${GO_BASE_URL}/lib/wasm/wasm_exec_node.js -O ${HOME}/.local/bin/wasm_exec_node.js \
+          wget ${GO_BASE_URL}/lib/wasm/wasm_exec.js -O ${HOME}/.local/bin/wasm_exec.js \
             || wget ${GO_BASE_URL}/misc/wasm/wasm_exec.js -O ${HOME}/.local/bin/wasm_exec.js
+          wget ${GO_BASE_URL}/lib/wasm/wasm_exec_node.js -O ${HOME}/.local/bin/wasm_exec_node.js \
+            || true
           chmod +x ${HOME}/.local/bin/go_js_wasm_exec
       - name: Run go test
         run: |
