@@ -14,8 +14,15 @@ jobs:
       fail-fast: false
       matrix:
         go:
-          - '1.15'
           - '1.16'
+          - '1.17'
+          - '1.18'
+          - '1.19'
+          - '1.20'
+          - '1.21'
+          - '1.22'
+          - '1.23'
+          - '1.24'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -39,26 +46,29 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      matrix:
+        go:
+          - '1.16.15'
+          - '1.24.4'
     env:
       GOOS: js
       GOARCH: wasm
-      GO_VERSION: 1.16.8
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ env.GO_VERSION }}
+          go-version: ${{ matrix.go }}
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
       - name: Get go_js_wasm_exec
         run: |
           mkdir -p ${HOME}/.local/bin
-          wget https://raw.githubusercontent.com/golang/go/go${{ env.GO_VERSION }}/misc/wasm/go_js_wasm_exec \
+          wget https://raw.githubusercontent.com/golang/go/go${{ matrix.go }}/misc/wasm/go_js_wasm_exec \
             -O ${HOME}/.local/bin/go_js_wasm_exec
-          wget https://raw.githubusercontent.com/golang/go/go${{ env.GO_VERSION }}/misc/wasm/wasm_exec.js \
+          wget https://raw.githubusercontent.com/golang/go/go${{ matrix.go }}/misc/wasm/wasm_exec.js \
             -O ${HOME}/.local/bin/wasm_exec.js
           chmod +x ${HOME}/.local/bin/go_js_wasm_exec
       - name: Run go test
