@@ -48,8 +48,8 @@ jobs:
       fail-fast: false
       matrix:
         go:
-          - '1.16.15'
-          - '1.24.4'
+          - '1.16'
+          - '1.24'
     env:
       GOOS: js
       GOARCH: wasm
@@ -66,10 +66,11 @@ jobs:
       - name: Get go_js_wasm_exec
         run: |
           mkdir -p ${HOME}/.local/bin
-          wget https://raw.githubusercontent.com/golang/go/go${{ matrix.go }}/misc/wasm/go_js_wasm_exec \
-            -O ${HOME}/.local/bin/go_js_wasm_exec
-          wget https://raw.githubusercontent.com/golang/go/go${{ matrix.go }}/misc/wasm/wasm_exec.js \
-            -O ${HOME}/.local/bin/wasm_exec.js
+          go_base_url=https://raw.githubusercontent.com/golang/go/refs/heads/release-branch.go${{ matrix.go }}
+          wget ${go_base_url}/lib/wasm/go_js_wasm_exec -O ${HOME}/.local/bin/go_js_wasm_exec \
+            || wget ${go_base_url}/misc/wasm/go_js_wasm_exec -O ${HOME}/.local/bin/go_js_wasm_exec \
+          wget ${go_base_url}/lib/wasm/wasm_exec.js -O ${HOME}/.local/bin/wasm_exec.js \
+            || wget ${go_base_url}/misc/wasm/wasm_exec.js -O ${HOME}/.local/bin/wasm_exec.js \
           chmod +x ${HOME}/.local/bin/go_js_wasm_exec
       - name: Run go test
         run: |
