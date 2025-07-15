@@ -93,8 +93,7 @@ func (f *voxelGrid) Filter(pp *pc.PointCloud) (*pc.PointCloud, error) {
 		)
 		cp := chunk[cid]
 		vcMin := vMin.Add(mat.Vec3{cp[0] * xcs, cp[1] * ycs, cp[2] * zcs})
-		vcMax := vcMin.Add(mat.Vec3{xcs, ycs, zcs})
-		out, err := f.filterChunk(vcMin, vcMax, iit, pp)
+		out, err := f.filterChunk(vcMin, mat.Vec3{xcs, ycs, zcs}, iit, pp)
 		if err != nil {
 			return nil, err
 		}
@@ -118,8 +117,7 @@ func (f *voxelGrid) Filter(pp *pc.PointCloud) (*pc.PointCloud, error) {
 	return newPc, nil
 }
 
-func (f *voxelGrid) filterChunk(vMin, vMax mat.Vec3, it pc.Vec3ConstForwardIterator, pp *pc.PointCloud) (*pc.PointCloud, error) {
-	size := vMax.Sub(vMin)
+func (f *voxelGrid) filterChunk(vMin, size mat.Vec3, it pc.Vec3ConstForwardIterator, pp *pc.PointCloud) (*pc.PointCloud, error) {
 	xs, ys, zs := int(size[0]/f.LeafSize[0]), int(size[1]/f.LeafSize[1]), int(size[2]/f.LeafSize[2])
 	nVoxels := (xs + 1) * (ys + 1) * (zs + 1)
 	if len(f.voxels) < nVoxels {
