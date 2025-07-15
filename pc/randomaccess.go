@@ -7,9 +7,6 @@ import (
 type Vec3RandomAccessor interface {
 	Vec3At(int) mat.Vec3
 	Len() int
-}
-
-type Vec3RandomAccesserRawIndexer interface {
 	RawIndexAt(int) int
 }
 
@@ -41,8 +38,6 @@ func (i *vec3RandomAccessorIterator) Vec3() mat.Vec3 {
 	return i.Vec3At(i.pos)
 }
 
-// RawIndex implements Vec3ForwardIteraterRawIndexer.
-// This is mainly for internal use and the parent Vec3RandomAccessor must also implement Vec3RandomAccesserRawIndexer.
 func (i *vec3RandomAccessorIterator) RawIndex() int {
-	return i.Vec3RandomAccessor.(Vec3RandomAccesserRawIndexer).RawIndexAt(i.pos)
+	return i.Vec3RandomAccessor.RawIndexAt(i.pos)
 }

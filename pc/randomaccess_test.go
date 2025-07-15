@@ -20,7 +20,7 @@ func TestVec3RandomAccessorIterator(t *testing.T) {
 		if v := it.Vec3(); !v.Equal(vs.Vec3At(i)) {
 			t.Errorf("%d: Expected Vec3: %v, got: %v", i, vs.Vec3At(i), v)
 		}
-		if ri := it.(Vec3ForwardIteratorRawIndexer).RawIndex(); ri != i {
+		if ri := it.RawIndex(); ri != i {
 			t.Errorf("%d: Expected RawIndex: %d, got: %d", i, i, ri)
 		}
 		it.Incr()

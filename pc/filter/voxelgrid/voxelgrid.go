@@ -123,7 +123,7 @@ func (f *voxelGrid) filterChunk(vMin, vMax mat.Vec3, it pc.Vec3ConstForwardItera
 		x, y, z := int(p[0]/f.LeafSize[0]), int(p[1]/f.LeafSize[1]), int(p[2]/f.LeafSize[2])
 		v := &voxels[x+xs*(y+ys*z)]
 		if v.num == 0 {
-			v.index = it.(pc.Vec3ForwardIteratorRawIndexer).RawIndex()
+			v.index = it.RawIndex()
 			n++
 		}
 		v.num++

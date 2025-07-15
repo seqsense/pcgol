@@ -96,7 +96,7 @@ func TestVec3Iterator(t *testing.T) {
 			t.Fatal(err)
 		}
 		for i := 0; it.IsValid(); it.Incr() {
-			if ri := it.(Vec3ForwardIteratorRawIndexer).RawIndex(); ri != i {
+			if ri := it.RawIndex(); ri != i {
 				t.Errorf("%d: Expected RawIndex: %d, got: %d", i, i, ri)
 			}
 			i++
@@ -109,7 +109,7 @@ func TestVec3Iterator(t *testing.T) {
 			t.Fatal(err)
 		}
 		for i := 0; i < 3; i++ {
-			if ri := it.(Vec3RandomAccesserRawIndexer).RawIndexAt(i); ri != i {
+			if ri := it.RawIndexAt(i); ri != i {
 				t.Errorf("%d: Expected RawIndex: %d, got: %d", i, i, ri)
 			}
 		}
@@ -500,6 +500,37 @@ func TestBinaryFloat32Iterator(t *testing.T) {
 			}
 			if v := it.Float32At(i); v != expectedX {
 				t.Errorf("Expected: %v, got: %v", expectedX, v)
+			}
+		}
+	})
+
+	t.Run("RawIndex", func(t *testing.T) {
+		it := binaryFloat32Iterator{
+			binaryIterator{
+				data:   data,
+				pos:    0,
+				stride: 4,
+			},
+		}
+		for i := 0; i < 3; i++ {
+			if ri := it.RawIndex(); ri != i {
+				t.Errorf("%d: Expected RawIndex: %d, got: %d", i, i, ri)
+			}
+			it.Incr()
+		}
+	})
+
+	t.Run("RawIndexAt", func(t *testing.T) {
+		it := binaryFloat32Iterator{
+			binaryIterator{
+				data:   data,
+				pos:    0,
+				stride: 4,
+			},
+		}
+		for i := 0; i < 3; i++ {
+			if ri := it.RawIndexAt(i); ri != i {
+				t.Errorf("%d: Expected RawIndex: %d, got: %d", i, i, ri)
 			}
 		}
 	})

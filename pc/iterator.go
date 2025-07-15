@@ -21,6 +21,10 @@ func (i *binaryIterator) Len() int {
 	return len(i.data) / i.stride
 }
 
+func (i *binaryIterator) RawIndex() int {
+	return i.pos / i.stride
+}
+
 type Float32Iterator interface {
 	Incr()
 	IsValid() bool
@@ -28,15 +32,13 @@ type Float32Iterator interface {
 	SetFloat32(float32)
 	Float32At(int) float32
 	Len() int
+	RawIndex() int
+	RawIndexAt(int) int
 }
 
 type Vec3Iterator interface {
 	Vec3RandomAccessor
 	Vec3ForwardIterator
-}
-
-type Vec3ForwardIteratorRawIndexer interface {
-	RawIndex() int
 }
 
 type Vec3ForwardIterator interface {
@@ -48,6 +50,7 @@ type Vec3ConstForwardIterator interface {
 	Incr()
 	IsValid() bool
 	Vec3() mat.Vec3
+	RawIndex() int
 }
 
 type binaryFloat32Iterator struct {
@@ -76,6 +79,10 @@ func (i *binaryFloat32Iterator) SetFloat32(v float32) {
 
 func (i *binaryFloat32Iterator) IsValid() bool {
 	return i.pos+4 <= len(i.data)
+}
+
+func (i *binaryFloat32Iterator) RawIndexAt(j int) int {
+	return i.RawIndex() + j
 }
 
 type float32Iterator struct {
@@ -161,6 +168,14 @@ func (i naiveVec3Iterator) SetVec3(v mat.Vec3) {
 	i[0].SetFloat32(v[0])
 	i[1].SetFloat32(v[1])
 	i[2].SetFloat32(v[2])
+}
+
+func (i naiveVec3Iterator) RawIndex() int {
+	return i[0].RawIndex()
+}
+
+func (i naiveVec3Iterator) RawIndexAt(j int) int {
+	return i[0].RawIndexAt(j)
 }
 
 type Uint32Iterator interface {
