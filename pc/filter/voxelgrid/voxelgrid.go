@@ -10,6 +10,8 @@ const initialSliceCap = 256
 
 type voxelGrid struct {
 	Options
+
+	voxels []voxel
 }
 
 type voxel struct {
@@ -67,6 +69,10 @@ func (f *voxelGrid) Filter(pp *pc.PointCloud) (*pc.PointCloud, error) {
 		}
 	}
 
+	defer func() {
+		f.voxels = nil
+	}()
+
 	for i := 0; it.IsValid(); it.Incr() {
 		p := it.Vec3().Sub(vMin)
 		x, y, z := int(p[0]/xcs), int(p[1]/ycs), int(p[2]/zcs)
@@ -115,13 +121,20 @@ func (f *voxelGrid) Filter(pp *pc.PointCloud) (*pc.PointCloud, error) {
 func (f *voxelGrid) filterChunk(vMin, vMax mat.Vec3, it pc.Vec3ConstForwardIterator, pp *pc.PointCloud) (*pc.PointCloud, error) {
 	size := vMax.Sub(vMin)
 	xs, ys, zs := int(size[0]/f.LeafSize[0]), int(size[1]/f.LeafSize[1]), int(size[2]/f.LeafSize[2])
-	voxels := make([]voxel, (xs+1)*(ys+1)*(zs+1))
+	nVoxels := (xs + 1) * (ys + 1) * (zs + 1)
+	if len(f.voxels) < nVoxels {
+		f.voxels = make([]voxel, nVoxels)
+	} else {
+		for i := range f.voxels {
+			f.voxels[i] = voxel{}
+		}
+	}
 
 	var n int
 	for ; it.IsValid(); it.Incr() {
 		p := it.Vec3().Sub(vMin)
 		x, y, z := int(p[0]/f.LeafSize[0]), int(p[1]/f.LeafSize[1]), int(p[2]/f.LeafSize[2])
-		v := &voxels[x+xs*(y+ys*z)]
+		v := &f.voxels[x+xs*(y+ys*z)]
 		if v.num == 0 {
 			v.index = it.RawIndex()
 			n++
@@ -143,8 +156,8 @@ func (f *voxelGrid) filterChunk(vMin, vMax mat.Vec3, it pc.Vec3ConstForwardItera
 	}
 	var jStart int
 	stride := pp.Stride()
-	for i := range voxels {
-		v := &voxels[i]
+	for i := range f.voxels {
+		v := &f.voxels[i]
 		if n := v.num; n > 0 {
 			iStart := v.index * stride
 			copy(newPc.Data[jStart:jStart+stride], pp.Data[iStart:iStart+stride])
