@@ -125,11 +125,16 @@ func TestIndiceUint32RandomAccessor(t *testing.T) {
 				}
 
 				uint32s := []uint32{}
+				indexes := []int{}
 				for i := 0; i < iRa.Len(); i++ {
 					uint32s = append(uint32s, iRa.Uint32At(i))
+					indexes = append(indexes, iRa.RawIndexAt(i))
 				}
 				if !reflect.DeepEqual(tt.expectedUint32s, uint32s) {
 					t.Fatalf("Expected: %v, got %v", tt.expectedUint32s, uint32s)
+				}
+				if !reflect.DeepEqual(tt.indices, indexes) {
+					t.Fatalf("Expected indexes: %v, got %v", tt.indices, indexes)
 				}
 			},
 		)
