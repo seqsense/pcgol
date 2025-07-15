@@ -56,11 +56,16 @@ func TestIndiceVec3RandomAccessor(t *testing.T) {
 				}
 
 				vec3s := Vec3Slice{}
+				indexes := []int{}
 				for i := 0; i < iRa.Len(); i++ {
 					vec3s = append(vec3s, iRa.Vec3At(i))
+					indexes = append(indexes, iRa.(Vec3RandomAccesserRawIndexer).RawIndexAt(i))
 				}
 				if !reflect.DeepEqual(tt.expectedVec3s, vec3s) {
 					t.Fatalf("Expected: %v, got %v", tt.expectedVec3s, vec3s)
+				}
+				if !reflect.DeepEqual(tt.indices, indexes) {
+					t.Fatalf("Expected indexes: %v, got %v", tt.indices, indexes)
 				}
 			},
 		)

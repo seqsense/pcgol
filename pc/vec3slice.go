@@ -14,3 +14,7 @@ func (v Vec3Slice) Len() int {
 func (v Vec3Slice) Vec3At(i int) mat.Vec3 {
 	return v[i]
 }
+
+func (v Vec3Slice) RawIndexAt(i int) int {
+	return i
+}

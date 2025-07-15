@@ -90,6 +90,31 @@ func TestVec3Iterator(t *testing.T) {
 		}
 	})
 
+	t.Run("RawIndex", func(t *testing.T) {
+		it, err := pp.Vec3Iterator()
+		if err != nil {
+			t.Fatal(err)
+		}
+		for i := 0; it.IsValid(); it.Incr() {
+			if ri := it.(Vec3ForwardIteraterRawIndexer).RawIndex(); ri != i {
+				t.Errorf("%d: Expected RawIndex: %d, got: %d", i, i, ri)
+			}
+			i++
+		}
+	})
+
+	t.Run("RawIndexAt", func(t *testing.T) {
+		it, err := pp.Vec3Iterator()
+		if err != nil {
+			t.Fatal(err)
+		}
+		for i := 0; i < 3; i++ {
+			if ri := it.(Vec3RandomAccesserRawIndexer).RawIndexAt(i); ri != i {
+				t.Errorf("%d: Expected RawIndex: %d, got: %d", i, i, ri)
+			}
+		}
+	})
+
 	pp.PointCloudHeader = PointCloudHeader{
 		Fields: []string{"xyz"},
 		Size:   []int{4},

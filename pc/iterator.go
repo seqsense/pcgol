@@ -35,6 +35,10 @@ type Vec3Iterator interface {
 	Vec3ForwardIterator
 }
 
+type Vec3ForwardIteratorRawIndexer interface {
+	RawIndex() int
+}
+
 type Vec3ForwardIterator interface {
 	Vec3ConstForwardIterator
 	SetVec3(mat.Vec3)
@@ -119,6 +123,14 @@ func (i *float32Iterator) Vec3At(j int) mat.Vec3 {
 
 func (i *float32Iterator) SetVec3(v mat.Vec3) {
 	copy(i.data[i.pos:i.pos+3], v[:])
+}
+
+func (i *float32Iterator) RawIndex() int {
+	return i.pos / i.stride
+}
+
+func (i *float32Iterator) RawIndexAt(j int) int {
+	return i.pos/i.stride + j
 }
 
 type naiveVec3Iterator [3]Float32Iterator
