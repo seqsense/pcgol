@@ -13,6 +13,7 @@ type Vec3RandomAccessor interface {
 type Uint32RandomAccessor interface {
 	Uint32At(int) uint32
 	Len() int
+	RawIndexAt(int) int
 }
 
 type vec3RandomAccessorIterator struct {

@@ -41,6 +41,10 @@ func (i *indiceUint32RandomAccessor) Uint32At(j int) uint32 {
 	return i.ra.Uint32At(i.indice[j])
 }
 
+func (i *indiceUint32RandomAccessor) RawIndexAt(j int) int {
+	return i.indice[j]
+}
+
 func NewIndiceUint32RandomAccessor(ra Uint32RandomAccessor, indice []int) Uint32RandomAccessor {
 	return &indiceUint32RandomAccessor{
 		ra:     ra,

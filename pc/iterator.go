@@ -184,6 +184,7 @@ type Uint32Iterator interface {
 	IsValid() bool
 	Uint32() uint32
 	SetUint32(uint32)
+	RawIndex() int
 }
 
 type binaryUint32Iterator struct {
@@ -207,4 +208,8 @@ func (i *binaryUint32Iterator) SetUint32(v uint32) {
 
 func (i *binaryUint32Iterator) IsValid() bool {
 	return i.pos+4 <= len(i.data)
+}
+
+func (i *binaryUint32Iterator) RawIndexAt(j int) int {
+	return i.RawIndex() + j
 }

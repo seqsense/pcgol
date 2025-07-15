@@ -212,6 +212,31 @@ func TestUint32Iterator(t *testing.T) {
 			}
 		}
 	})
+
+	t.Run("RawIndex", func(t *testing.T) {
+		it, err := pp.Uint32Iterator("label")
+		if err != nil {
+			t.Fatal(err)
+		}
+		for i := 0; i < 3; i++ {
+			if ri := it.RawIndex(); ri != i {
+				t.Errorf("%d: Expected RawIndex: %d, got: %d", i, i, ri)
+			}
+			it.Incr()
+		}
+	})
+
+	t.Run("RawIndexAt", func(t *testing.T) {
+		it, err := pp.Uint32Iterator("label")
+		if err != nil {
+			t.Fatal(err)
+		}
+		for i := 0; i < 3; i++ {
+			if ri := it.RawIndexAt(i); ri != i {
+				t.Errorf("%d: Expected RawIndex: %d, got: %d", i, i, ri)
+			}
+		}
+	})
 }
 
 func TestFloat32IteratorAndUint32Iterator(t *testing.T) {

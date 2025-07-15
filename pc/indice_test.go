@@ -84,6 +84,10 @@ func (ra *dummyUint32RandomAccessor) Uint32At(i int) uint32 {
 	return ra.values[i]
 }
 
+func (ra *dummyUint32RandomAccessor) RawIndexAt(i int) int {
+	return i
+}
+
 func TestIndiceUint32RandomAccessor(t *testing.T) {
 	ra := &dummyUint32RandomAccessor{
 		values: []uint32{1, 2, 3, 4},
