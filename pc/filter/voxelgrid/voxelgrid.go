@@ -59,14 +59,13 @@ func (f *voxelGrid) Filter(pp *pc.PointCloud) (*pc.PointCloud, error) {
 	for i := range indices {
 		indices[i] = make([]int, 0, initialSliceCap)
 	}
-	chunk := make([][3]float32, nChunks)
-	for z := 0; z < nz; z++ {
-		for y := 0; y < ny; y++ {
-			for x := 0; x < nx; x++ {
-				cid := ((z*ny)+y)*nx + x
-				chunk[cid] = [3]float32{float32(x), float32(y), float32(z)}
-			}
-		}
+
+	cid2xyz := func(cid int) [3]float32 {
+		x := cid % nx
+		cid = cid / nx
+		y := cid % ny
+		z := cid / ny
+		return [3]float32{float32(x), float32(y), float32(z)}
 	}
 
 	defer func() {
@@ -91,7 +90,7 @@ func (f *voxelGrid) Filter(pp *pc.PointCloud) (*pc.PointCloud, error) {
 		iit := pc.NewVec3RandomAccessorIterator(
 			pc.NewIndiceVec3RandomAccessor(it0, indice),
 		)
-		cp := chunk[cid]
+		cp := cid2xyz(cid)
 		vcMin := vMin.Add(mat.Vec3{cp[0] * xcs, cp[1] * ycs, cp[2] * zcs})
 		out, err := f.filterChunk(vcMin, mat.Vec3{xcs, ycs, zcs}, iit, pp)
 		if err != nil {
