@@ -76,6 +76,7 @@ func (f *voxelGrid) Filter(pp *pc.PointCloud) (*pc.PointCloud, error) {
 		f.voxels = nil
 	}()
 
+	// Count points in each chunk and allocate indices
 	for i := 0; i < it.Len(); i++ {
 		cid := vec2cid(it.Vec3At(i).Sub(vMin))
 		nIndices[cid]++
@@ -83,10 +84,14 @@ func (f *voxelGrid) Filter(pp *pc.PointCloud) (*pc.PointCloud, error) {
 	for i := range indices {
 		indices[i] = make([]int, 0, nIndices[i])
 	}
+
+	// Build indice for each chunk
 	for i := 0; i < it.Len(); i++ {
 		cid := vec2cid(it.Vec3At(i).Sub(vMin))
 		indices[cid] = append(indices[cid], i)
 	}
+
+	// Apply filter to the chunks
 	for cid, indice := range indices {
 		if len(indice) == 0 {
 			continue
@@ -103,6 +108,7 @@ func (f *voxelGrid) Filter(pp *pc.PointCloud) (*pc.PointCloud, error) {
 		outs = append(outs, out)
 	}
 
+	// Combine the outputs
 	var n int
 	for _, out := range outs {
 		n += out.Width * out.Height
