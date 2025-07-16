@@ -7,18 +7,21 @@ import (
 type Vec3RandomAccessor interface {
 	Vec3At(int) mat.Vec3
 	Len() int
+	// RawIndexAt returns the index of the specific item on the base PointCloud storage
 	RawIndexAt(int) int
 }
 
 type Float32RandomAccessor interface {
 	Float32At(int) float32
 	Len() int
+	// RawIndexAt returns the index of the specific item on the base PointCloud storage
 	RawIndexAt(int) int
 }
 
 type Uint32RandomAccessor interface {
 	Uint32At(int) uint32
 	Len() int
+	// RawIndexAt returns the index of the specific item on the base PointCloud storage
 	RawIndexAt(int) int
 }
 
