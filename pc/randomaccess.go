@@ -10,6 +10,12 @@ type Vec3RandomAccessor interface {
 	RawIndexAt(int) int
 }
 
+type Float32RandomAccessor interface {
+	Float32At(int) float32
+	Len() int
+	RawIndexAt(int) int
+}
+
 type Uint32RandomAccessor interface {
 	Uint32At(int) uint32
 	Len() int

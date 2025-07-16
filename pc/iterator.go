@@ -26,14 +26,20 @@ func (i *binaryIterator) RawIndex() int {
 }
 
 type Float32Iterator interface {
+	Float32RandomAccessor
+	Float32ForwardIterator
+}
+
+type Float32ForwardIterator interface {
+	Float32ConstForwardIterator
+	SetFloat32(float32)
+}
+
+type Float32ConstForwardIterator interface {
 	Incr()
 	IsValid() bool
 	Float32() float32
-	SetFloat32(float32)
-	Float32At(int) float32
-	Len() int
 	RawIndex() int
-	RawIndexAt(int) int
 }
 
 type Vec3Iterator interface {
@@ -180,10 +186,18 @@ func (i naiveVec3Iterator) RawIndexAt(j int) int {
 
 type Uint32Iterator interface {
 	Uint32RandomAccessor
+	Uint32ForwardIterator
+}
+
+type Uint32ForwardIterator interface {
+	Uint32ConstForwardIterator
+	SetUint32(uint32)
+}
+
+type Uint32ConstForwardIterator interface {
 	Incr()
 	IsValid() bool
 	Uint32() uint32
-	SetUint32(uint32)
 	RawIndex() int
 }
 
