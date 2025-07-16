@@ -56,9 +56,7 @@ func (f *voxelGrid) Filter(pp *pc.PointCloud) (*pc.PointCloud, error) {
 
 	outs := make([]*pc.PointCloud, 0, nChunks)
 	indices := make([][]int, nChunks)
-	for i := range indices {
-		indices[i] = make([]int, 0, initialSliceCap)
-	}
+	nIndices := make([]int, nChunks)
 
 	cid2xyz := func(cid int) [3]float32 {
 		x := cid % nx
@@ -72,23 +70,27 @@ func (f *voxelGrid) Filter(pp *pc.PointCloud) (*pc.PointCloud, error) {
 		f.voxels = nil
 	}()
 
-	for i := 0; it.IsValid(); it.Incr() {
-		p := it.Vec3().Sub(vMin)
+	for i := 0; i < it.Len(); i++ {
+		p := it.Vec3At(i).Sub(vMin)
+		x, y, z := int(p[0]/xcs), int(p[1]/ycs), int(p[2]/zcs)
+		cid := ((z*ny)+y)*nx + x
+		nIndices[cid]++
+	}
+	for i := range indices {
+		indices[i] = make([]int, 0, nIndices[i])
+	}
+	for i := 0; i < it.Len(); i++ {
+		p := it.Vec3At(i).Sub(vMin)
 		x, y, z := int(p[0]/xcs), int(p[1]/ycs), int(p[2]/zcs)
 		cid := ((z*ny)+y)*nx + x
 		indices[cid] = append(indices[cid], i)
-		i++
-	}
-	it0, err := pp.Vec3Iterator()
-	if err != nil {
-		return nil, err
 	}
 	for cid, indice := range indices {
 		if len(indice) == 0 {
 			continue
 		}
 		iit := pc.NewVec3RandomAccessorIterator(
-			pc.NewIndiceVec3RandomAccessor(it0, indice),
+			pc.NewIndiceVec3RandomAccessor(it, indice),
 		)
 		cp := cid2xyz(cid)
 		vcMin := vMin.Add(mat.Vec3{cp[0] * xcs, cp[1] * ycs, cp[2] * zcs})
