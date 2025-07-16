@@ -56,11 +56,16 @@ func TestIndiceVec3RandomAccessor(t *testing.T) {
 				}
 
 				vec3s := Vec3Slice{}
+				indexes := []int{}
 				for i := 0; i < iRa.Len(); i++ {
 					vec3s = append(vec3s, iRa.Vec3At(i))
+					indexes = append(indexes, iRa.RawIndexAt(i))
 				}
 				if !reflect.DeepEqual(tt.expectedVec3s, vec3s) {
 					t.Fatalf("Expected: %v, got %v", tt.expectedVec3s, vec3s)
+				}
+				if !reflect.DeepEqual(tt.indices, indexes) {
+					t.Fatalf("Expected indexes: %v, got %v", tt.indices, indexes)
 				}
 			},
 		)
@@ -77,6 +82,10 @@ func (ra *dummyUint32RandomAccessor) Len() int {
 
 func (ra *dummyUint32RandomAccessor) Uint32At(i int) uint32 {
 	return ra.values[i]
+}
+
+func (ra *dummyUint32RandomAccessor) RawIndexAt(i int) int {
+	return i
 }
 
 func TestIndiceUint32RandomAccessor(t *testing.T) {
@@ -116,11 +125,16 @@ func TestIndiceUint32RandomAccessor(t *testing.T) {
 				}
 
 				uint32s := []uint32{}
+				indexes := []int{}
 				for i := 0; i < iRa.Len(); i++ {
 					uint32s = append(uint32s, iRa.Uint32At(i))
+					indexes = append(indexes, iRa.RawIndexAt(i))
 				}
 				if !reflect.DeepEqual(tt.expectedUint32s, uint32s) {
 					t.Fatalf("Expected: %v, got %v", tt.expectedUint32s, uint32s)
+				}
+				if !reflect.DeepEqual(tt.indices, indexes) {
+					t.Fatalf("Expected indexes: %v, got %v", tt.indices, indexes)
 				}
 			},
 		)

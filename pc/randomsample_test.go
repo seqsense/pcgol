@@ -77,7 +77,12 @@ func TestVec3RandomSampleIterator(t *testing.T) {
 			var sampled Vec3Slice
 			it := NewVec3RandomSampleIterator(orig, tt.ratio)
 			for ; it.IsValid(); it.Incr() {
-				sampled = append(sampled, it.Vec3())
+				v := it.Vec3()
+				sampled = append(sampled, v)
+				i := it.RawIndex()
+				if !v.Equal(orig.Vec3At(i)) {
+					t.Fatalf("RawIndex %d: Expected %v, got %v", i, orig.Vec3At(i), v)
+				}
 			}
 
 			n := len(sampled)
@@ -99,5 +104,4 @@ func TestVec3RandomSampleIterator(t *testing.T) {
 			}
 		})
 	}
-
 }

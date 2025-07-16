@@ -17,7 +17,7 @@ func NewVec3RandomSampleIterator(ra Vec3RandomAccessor, ratio float32) Vec3Const
 		if it, ok := ra.(Vec3ConstForwardIterator); ok {
 			return it
 		}
-		return &vec3RandomAccessToIterator{ra: ra}
+		return NewVec3RandomAccessorIterator(ra)
 	}
 	expectedInterval := 1 / ratio
 	return &vec3RandomSampleIterator{
@@ -47,18 +47,13 @@ func (s *vec3RandomSampleIterator) Vec3() mat.Vec3 {
 	return s.ra.Vec3At(int(s.pos))
 }
 
-type vec3RandomAccessToIterator struct {
-	ra Vec3RandomAccessor
-
-	pos float32
+func (s *vec3RandomSampleIterator) RawIndex() int {
+	return int(s.pos)
 }
-
-func (s *vec3RandomAccessToIterator) Incr()          { s.pos++ }
-func (s *vec3RandomAccessToIterator) IsValid() bool  { return int(s.pos) < s.ra.Len() }
-func (s *vec3RandomAccessToIterator) Vec3() mat.Vec3 { return s.ra.Vec3At(int(s.pos)) }
 
 type vec3EmptyIterator struct{}
 
 func (vec3EmptyIterator) Incr()          {}
 func (vec3EmptyIterator) IsValid() bool  { return false }
 func (vec3EmptyIterator) Vec3() mat.Vec3 { panic("invalid access to empty iterator") }
+func (vec3EmptyIterator) RawIndex() int  { return 0 }
