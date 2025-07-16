@@ -39,6 +39,7 @@ type Float32ConstForwardIterator interface {
 	Incr()
 	IsValid() bool
 	Float32() float32
+	// RawIndex returns the index of the current item on the base PointCloud storage
 	RawIndex() int
 }
 
@@ -56,6 +57,7 @@ type Vec3ConstForwardIterator interface {
 	Incr()
 	IsValid() bool
 	Vec3() mat.Vec3
+	// RawIndex returns the index of the current item on the base PointCloud storage
 	RawIndex() int
 }
 
@@ -198,6 +200,7 @@ type Uint32ConstForwardIterator interface {
 	Incr()
 	IsValid() bool
 	Uint32() uint32
+	// RawIndex returns the index of the current item on the base PointCloud storage
 	RawIndex() int
 }
 
