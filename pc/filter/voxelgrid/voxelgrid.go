@@ -52,6 +52,13 @@ func (f *voxelGrid) Filter(pp *pc.PointCloud) (*pc.PointCloud, error) {
 		f.LeafSize[1] * float32(f.ChunkSize[1]),
 		f.LeafSize[2] * float32(f.ChunkSize[2]),
 	}
+	// If chunk size is larger than the original point cloud size,
+	// clamp the chunk size to avoid using excess memory
+	for i := 0; i < 3; i++ {
+		if chunkSize[i] > size[i]+f.LeafSize[i] {
+			chunkSize[i] = size[i] + f.LeafSize[i]
+		}
+	}
 	nx, ny, nz := int(size[0]/chunkSize[0])+1, int(size[1]/chunkSize[1])+1, int(size[2]/chunkSize[2])+1
 	nChunks := nx * ny * nz
 
