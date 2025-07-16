@@ -47,42 +47,44 @@ func (f *voxelGrid) Filter(pp *pc.PointCloud) (*pc.PointCloud, error) {
 	}
 
 	size := vMax.Sub(vMin)
-	xcs := f.LeafSize[0] * float32(f.ChunkSize[0])
-	ycs := f.LeafSize[1] * float32(f.ChunkSize[1])
-	zcs := f.LeafSize[2] * float32(f.ChunkSize[2])
-	nx, ny, nz := int(size[0]/xcs)+1, int(size[1]/ycs)+1, int(size[2]/zcs)+1
-
+	chunkSize := mat.Vec3{
+		f.LeafSize[0] * float32(f.ChunkSize[0]),
+		f.LeafSize[1] * float32(f.ChunkSize[1]),
+		f.LeafSize[2] * float32(f.ChunkSize[2]),
+	}
+	nx, ny, nz := int(size[0]/chunkSize[0])+1, int(size[1]/chunkSize[1])+1, int(size[2]/chunkSize[2])+1
 	nChunks := nx * ny * nz
 
 	outs := make([]*pc.PointCloud, 0, nChunks)
 	indices := make([][]int, nChunks)
 	nIndices := make([]int, nChunks)
 
-	cid2xyz := func(cid int) [3]float32 {
+	cid2xyz := func(cid int) mat.Vec3 {
 		x := cid % nx
 		cid = cid / nx
 		y := cid % ny
 		z := cid / ny
-		return [3]float32{float32(x), float32(y), float32(z)}
+		return mat.Vec3{float32(x), float32(y), float32(z)}
+	}
+	vec2cid := func(p mat.Vec3) int {
+		x, y, z := int(p[0]/chunkSize[0]), int(p[1]/chunkSize[1]), int(p[2]/chunkSize[2])
+		return ((z*ny)+y)*nx + x
 	}
 
 	defer func() {
+		// Make large slice GC-ed ASAP
 		f.voxels = nil
 	}()
 
 	for i := 0; i < it.Len(); i++ {
-		p := it.Vec3At(i).Sub(vMin)
-		x, y, z := int(p[0]/xcs), int(p[1]/ycs), int(p[2]/zcs)
-		cid := ((z*ny)+y)*nx + x
+		cid := vec2cid(it.Vec3At(i).Sub(vMin))
 		nIndices[cid]++
 	}
 	for i := range indices {
 		indices[i] = make([]int, 0, nIndices[i])
 	}
 	for i := 0; i < it.Len(); i++ {
-		p := it.Vec3At(i).Sub(vMin)
-		x, y, z := int(p[0]/xcs), int(p[1]/ycs), int(p[2]/zcs)
-		cid := ((z*ny)+y)*nx + x
+		cid := vec2cid(it.Vec3At(i).Sub(vMin))
 		indices[cid] = append(indices[cid], i)
 	}
 	for cid, indice := range indices {
@@ -93,8 +95,8 @@ func (f *voxelGrid) Filter(pp *pc.PointCloud) (*pc.PointCloud, error) {
 			pc.NewIndiceVec3RandomAccessor(it, indice),
 		)
 		cp := cid2xyz(cid)
-		vcMin := vMin.Add(mat.Vec3{cp[0] * xcs, cp[1] * ycs, cp[2] * zcs})
-		out, err := f.filterChunk(vcMin, mat.Vec3{xcs, ycs, zcs}, iit, pp)
+		vcMin := vMin.Add(cp.ElementMul(chunkSize))
+		out, err := f.filterChunk(vcMin, chunkSize, iit, pp)
 		if err != nil {
 			return nil, err
 		}
