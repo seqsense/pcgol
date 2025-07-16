@@ -21,13 +21,25 @@ func (i *binaryIterator) Len() int {
 	return len(i.data) / i.stride
 }
 
+func (i *binaryIterator) RawIndex() int {
+	return i.pos / i.stride
+}
+
 type Float32Iterator interface {
+	Float32RandomAccessor
+	Float32ForwardIterator
+}
+
+type Float32ForwardIterator interface {
+	Float32ConstForwardIterator
+	SetFloat32(float32)
+}
+
+type Float32ConstForwardIterator interface {
 	Incr()
 	IsValid() bool
 	Float32() float32
-	SetFloat32(float32)
-	Float32At(int) float32
-	Len() int
+	RawIndex() int
 }
 
 type Vec3Iterator interface {
@@ -44,6 +56,7 @@ type Vec3ConstForwardIterator interface {
 	Incr()
 	IsValid() bool
 	Vec3() mat.Vec3
+	RawIndex() int
 }
 
 type binaryFloat32Iterator struct {
@@ -72,6 +85,10 @@ func (i *binaryFloat32Iterator) SetFloat32(v float32) {
 
 func (i *binaryFloat32Iterator) IsValid() bool {
 	return i.pos+4 <= len(i.data)
+}
+
+func (i *binaryFloat32Iterator) RawIndexAt(j int) int {
+	return i.RawIndex() + j
 }
 
 type float32Iterator struct {
@@ -121,6 +138,14 @@ func (i *float32Iterator) SetVec3(v mat.Vec3) {
 	copy(i.data[i.pos:i.pos+3], v[:])
 }
 
+func (i *float32Iterator) RawIndex() int {
+	return i.pos / i.stride
+}
+
+func (i *float32Iterator) RawIndexAt(j int) int {
+	return i.pos/i.stride + j
+}
+
 type naiveVec3Iterator [3]Float32Iterator
 
 func (i naiveVec3Iterator) IsValid() bool {
@@ -151,12 +176,29 @@ func (i naiveVec3Iterator) SetVec3(v mat.Vec3) {
 	i[2].SetFloat32(v[2])
 }
 
+func (i naiveVec3Iterator) RawIndex() int {
+	return i[0].RawIndex()
+}
+
+func (i naiveVec3Iterator) RawIndexAt(j int) int {
+	return i[0].RawIndexAt(j)
+}
+
 type Uint32Iterator interface {
 	Uint32RandomAccessor
+	Uint32ForwardIterator
+}
+
+type Uint32ForwardIterator interface {
+	Uint32ConstForwardIterator
+	SetUint32(uint32)
+}
+
+type Uint32ConstForwardIterator interface {
 	Incr()
 	IsValid() bool
 	Uint32() uint32
-	SetUint32(uint32)
+	RawIndex() int
 }
 
 type binaryUint32Iterator struct {
@@ -180,4 +222,8 @@ func (i *binaryUint32Iterator) SetUint32(v uint32) {
 
 func (i *binaryUint32Iterator) IsValid() bool {
 	return i.pos+4 <= len(i.data)
+}
+
+func (i *binaryUint32Iterator) RawIndexAt(j int) int {
+	return i.RawIndex() + j
 }
