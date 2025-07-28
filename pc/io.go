@@ -21,26 +21,47 @@ const (
 	BinaryCompressed
 )
 
+func UnmarshalHeader(r io.Reader) (*PointCloudHeader, error) {
+	rb := bufio.NewReader(r)
+	ph := &PointCloudHeader{}
+	if _, _, err := unmarshalHeaderTo(rb, ph); err != nil {
+		return nil, err
+	}
+	return ph, nil
+}
+
 func Unmarshal(r io.Reader) (*PointCloud, error) {
 	rb := bufio.NewReader(r)
 	pp := &PointCloud{}
-	var ppFmt Format
+	nPoints, ppFmt, err := unmarshalHeaderTo(rb, &pp.PointCloudHeader)
+	if err != nil {
+		return nil, err
+	}
+	pp.Points = nPoints
+	if err := unmarshalTo(rb, pp, ppFmt); err != nil {
+		return nil, err
+	}
+	return pp, nil
+}
 
+func unmarshalHeaderTo(rb *bufio.Reader, pp *PointCloudHeader) (int, Format, error) {
+	var ppFmt Format
+	var nPoints int
 L_HEADER:
 	for {
 		line, _, err := rb.ReadLine()
 		if err != nil {
-			return nil, err
+			return 0, 0, err
 		}
 		args := strings.Fields(string(line))
 		if len(args) < 2 {
-			return nil, errors.New("header field must have value")
+			return 0, 0, errors.New("header field must have value")
 		}
 		switch args[0] {
 		case "VERSION":
 			f, err := strconv.ParseFloat(args[1], 32)
 			if err != nil {
-				return nil, err
+				return 0, 0, err
 			}
 			pp.Version = float32(f)
 		case "FIELDS":
@@ -50,7 +71,7 @@ L_HEADER:
 			for i, s := range args[1:] {
 				pp.Size[i], err = strconv.Atoi(s)
 				if err != nil {
-					return nil, err
+					return 0, 0, err
 				}
 			}
 		case "TYPE":
@@ -60,32 +81,32 @@ L_HEADER:
 			for i, s := range args[1:] {
 				pp.Count[i], err = strconv.Atoi(s)
 				if err != nil {
-					return nil, err
+					return 0, 0, err
 				}
 			}
 		case "WIDTH":
 			pp.Width, err = strconv.Atoi(args[1])
 			if err != nil {
-				return nil, err
+				return 0, 0, err
 			}
 		case "HEIGHT":
 			pp.Height, err = strconv.Atoi(args[1])
 			if err != nil {
-				return nil, err
+				return 0, 0, err
 			}
 		case "VIEWPOINT":
 			pp.Viewpoint = make([]float32, len(args)-1)
 			for i, s := range args[1:] {
 				f, err := strconv.ParseFloat(s, 32)
 				if err != nil {
-					return nil, err
+					return 0, 0, err
 				}
 				pp.Viewpoint[i] = float32(f)
 			}
 		case "POINTS":
-			pp.Points, err = strconv.Atoi(args[1])
+			nPoints, err = strconv.Atoi(args[1])
 			if err != nil {
-				return nil, err
+				return 0, 0, err
 			}
 		case "DATA":
 			switch args[1] {
@@ -96,22 +117,25 @@ L_HEADER:
 			case "binary_compressed":
 				ppFmt = BinaryCompressed
 			default:
-				return nil, errors.New("unknown data format")
+				return 0, 0, errors.New("unknown data format")
 			}
 			break L_HEADER
 		}
 	}
 	// validate
 	if len(pp.Fields) != len(pp.Size) {
-		return nil, errors.New("size field size is wrong")
+		return 0, 0, errors.New("size field size is wrong")
 	}
 	if len(pp.Fields) != len(pp.Type) {
-		return nil, errors.New("type field size is wrong")
+		return 0, 0, errors.New("type field size is wrong")
 	}
 	if len(pp.Fields) != len(pp.Count) {
-		return nil, errors.New("count field size is wrong")
+		return 0, 0, errors.New("count field size is wrong")
 	}
+	return nPoints, ppFmt, nil
+}
 
+func unmarshalTo(rb *bufio.Reader, pp *PointCloud, ppFmt Format) error {
 	switch ppFmt {
 	case Ascii:
 		pp.Data = make([]byte, pp.Points*pp.Stride())
@@ -119,7 +143,7 @@ L_HEADER:
 		for {
 			line, _, err := rb.ReadLine()
 			if err != nil && err != io.EOF {
-				return nil, err
+				return err
 			}
 			if err == io.EOF {
 				break
@@ -132,7 +156,7 @@ L_HEADER:
 					case "F":
 						v, err := strconv.ParseFloat(pointData[lineOffset+j], 32)
 						if err != nil {
-							return nil, err
+							return err
 						}
 						b := math.Float32bits(float32(v))
 						binary.LittleEndian.PutUint32(
@@ -141,7 +165,7 @@ L_HEADER:
 					case "U":
 						v, _ := strconv.ParseUint(pointData[lineOffset+j], 10, 32)
 						if err != nil {
-							return nil, err
+							return err
 						}
 						binary.LittleEndian.PutUint32(
 							pp.Data[dataOffset:dataOffset+4], uint32(v),
@@ -155,30 +179,30 @@ L_HEADER:
 	case Binary:
 		b := make([]byte, pp.Points*pp.Stride())
 		if _, err := io.ReadFull(rb, b); err != nil {
-			return nil, err
+			return err
 		}
 		pp.Data = b
 	case BinaryCompressed:
 		var nCompressed, nUncompressed int32
 		if err := binary.Read(rb, binary.LittleEndian, &nCompressed); err != nil {
-			return nil, err
+			return err
 		}
 		if err := binary.Read(rb, binary.LittleEndian, &nUncompressed); err != nil {
-			return nil, err
+			return err
 		}
 
 		b := make([]byte, nCompressed)
 		if _, err := io.ReadFull(rb, b); err != nil {
-			return nil, err
+			return err
 		}
 
 		dec := make([]byte, nUncompressed)
 		n, err := lzf.Decompress(b[:nCompressed], dec)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if int(nUncompressed) != n {
-			return nil, errors.New("wrong uncompressed size")
+			return errors.New("wrong uncompressed size")
 		}
 
 		head := make([]int, len(pp.Fields))
@@ -202,8 +226,7 @@ L_HEADER:
 			}
 		}
 	}
-
-	return pp, nil
+	return nil
 }
 
 func Marshal(pp *PointCloud, w io.Writer) error {

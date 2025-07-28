@@ -138,13 +138,24 @@ func TestMarshal(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				pp2, err := Unmarshal(obuf)
-				if err != nil {
-					t.Fatal(err)
-				}
-				if !reflect.DeepEqual(tt.expectedHeader, pp2.PointCloudHeader) {
-					t.Errorf("Expected %v, got %v", tt.expectedHeader, pp2.PointCloudHeader)
-				}
+				t.Run("Unmarshal", func(t *testing.T) {
+					pp2, err := Unmarshal(bytes.NewReader(obuf.Bytes()))
+					if err != nil {
+						t.Fatal(err)
+					}
+					if !reflect.DeepEqual(tt.expectedHeader, pp2.PointCloudHeader) {
+						t.Errorf("Expected %v, got %v", tt.expectedHeader, pp2.PointCloudHeader)
+					}
+				})
+				t.Run("UnmarshalHeader", func(t *testing.T) {
+					ph, err := UnmarshalHeader(bytes.NewReader(obuf.Bytes()))
+					if err != nil {
+						t.Fatal(err)
+					}
+					if !reflect.DeepEqual(tt.expectedHeader, *ph) {
+						t.Errorf("Expected %v, got %v", tt.expectedHeader, *ph)
+					}
+				})
 			})
 		}
 	})
