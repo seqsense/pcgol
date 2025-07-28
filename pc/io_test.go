@@ -113,12 +113,6 @@ DATA ascii
 				t.Fatal(err)
 			}
 
-			/*
-				bb := bytes.NewBuffer(nil)
-				Marshal(pp, bb)
-				t.Logf("%#v", bb.Bytes())
-			*/
-
 			vt, err := pp.Vec3Iterator()
 			if err != nil {
 				t.Fatal(err)
