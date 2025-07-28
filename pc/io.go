@@ -163,7 +163,7 @@ func unmarshalTo(rb *bufio.Reader, pp *PointCloud, ppFmt Format) error {
 							pp.Data[dataOffset:dataOffset+4], b,
 						)
 					case "U":
-						v, _ := strconv.ParseUint(pointData[lineOffset+j], 10, 32)
+						v, err := strconv.ParseUint(pointData[lineOffset+j], 10, 32)
 						if err != nil {
 							return err
 						}
