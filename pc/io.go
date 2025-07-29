@@ -24,7 +24,7 @@ const (
 func UnmarshalHeader(r io.Reader) (*PointCloudHeader, error) {
 	rb := bufio.NewReader(r)
 	ph := &PointCloudHeader{}
-	if _, _, err := unmarshalHeaderTo(rb, ph); err != nil {
+	if _, _, err := unmarshalPCDHeaderTo(rb, ph); err != nil {
 		return nil, err
 	}
 	return ph, nil
@@ -33,19 +33,19 @@ func UnmarshalHeader(r io.Reader) (*PointCloudHeader, error) {
 func Unmarshal(r io.Reader) (*PointCloud, error) {
 	rb := bufio.NewReader(r)
 	pp := &PointCloud{}
-	nPoints, ppFmt, err := unmarshalHeaderTo(rb, &pp.PointCloudHeader)
+	nPoints, fmt, err := unmarshalPCDHeaderTo(rb, &pp.PointCloudHeader)
 	if err != nil {
 		return nil, err
 	}
 	pp.Points = nPoints
-	if err := unmarshalTo(rb, pp, ppFmt); err != nil {
+	if err := unmarshalPCDDataTo(rb, pp, fmt); err != nil {
 		return nil, err
 	}
 	return pp, nil
 }
 
-func unmarshalHeaderTo(rb *bufio.Reader, pp *PointCloudHeader) (int, Format, error) {
-	var ppFmt Format
+func unmarshalPCDHeaderTo(rb *bufio.Reader, pp *PointCloudHeader) (int, Format, error) {
+	var fmt Format
 	var nPoints int
 L_HEADER:
 	for {
@@ -111,11 +111,11 @@ L_HEADER:
 		case "DATA":
 			switch args[1] {
 			case "ascii":
-				ppFmt = Ascii
+				fmt = Ascii
 			case "binary":
-				ppFmt = Binary
+				fmt = Binary
 			case "binary_compressed":
-				ppFmt = BinaryCompressed
+				fmt = BinaryCompressed
 			default:
 				return 0, 0, errors.New("unknown data format")
 			}
@@ -132,11 +132,11 @@ L_HEADER:
 	if len(pp.Fields) != len(pp.Count) {
 		return 0, 0, errors.New("count field size is wrong")
 	}
-	return nPoints, ppFmt, nil
+	return nPoints, fmt, nil
 }
 
-func unmarshalTo(rb *bufio.Reader, pp *PointCloud, ppFmt Format) error {
-	switch ppFmt {
+func unmarshalPCDDataTo(rb *bufio.Reader, pp *PointCloud, fmt Format) error {
+	switch fmt {
 	case Ascii:
 		pp.Data = make([]byte, pp.Points*pp.Stride())
 		dataOffset := 0
