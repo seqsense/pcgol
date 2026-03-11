@@ -339,3 +339,57 @@ func TestMarshal(t *testing.T) {
 		}
 	})
 }
+
+func TestMarshalUnmarshalColor(t *testing.T) {
+	pp := &PointCloud{
+		PointCloudHeader: PointCloudHeader{
+			Version: 0.7,
+			Fields:  []string{"x", "y", "z", "rgb"},
+			Size:    []int{4, 4, 4, 4},
+			Type:    []string{"F", "F", "F", "F"},
+			Count:   []int{1, 1, 1, 1},
+			Width:   2,
+			Height:  1,
+		},
+		Points: 2,
+		Data:   make([]byte, 2*16),
+	}
+
+	colors := []Color{
+		{R: 100, G: 200, B: 50},
+		{R: 10, G: 20, B: 30},
+	}
+
+	ct, err := pp.ColorIterator()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range colors {
+		ct.SetColor(c)
+		ct.Incr()
+	}
+
+	var buf bytes.Buffer
+	if err := Marshal(pp, &buf); err != nil {
+		t.Fatal(err)
+	}
+
+	pp2, err := Unmarshal(bytes.NewReader(buf.Bytes()))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ct2, err := pp2.ColorIterator()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i, expected := range colors {
+		if !ct2.IsValid() {
+			t.Fatalf("ColorIterator not valid at point %d after round-trip", i)
+		}
+		if got := ct2.Color(); got != expected {
+			t.Errorf("Point %d: expected %v, got %v", i, expected, got)
+		}
+		ct2.Incr()
+	}
+}
