@@ -51,3 +51,4 @@ func (i *vec3RandomAccessorIterator) Vec3() mat.Vec3 {
 func (i *vec3RandomAccessorIterator) RawIndex() int {
 	return i.Vec3RandomAccessor.RawIndexAt(i.pos)
 }
+

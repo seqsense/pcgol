@@ -7,6 +7,144 @@ import (
 	"github.com/seqsense/pcgol/mat"
 )
 
+func TestColorIterator(t *testing.T) {
+	type colorPoint struct {
+		v     mat.Vec3
+		color Color
+	}
+
+	points := []colorPoint{
+		{mat.Vec3{1.0, 2.0, 3.0}, Color{R: 255, G: 0, B: 0}},
+		{mat.Vec3{4.0, 5.0, 6.0}, Color{R: 0, G: 255, B: 0}},
+		{mat.Vec3{7.0, 8.0, 9.0}, Color{R: 0, G: 0, B: 255}},
+	}
+
+	pp := &PointCloud{
+		PointCloudHeader: PointCloudHeader{
+			Fields: []string{"x", "y", "z", "rgb"},
+			Size:   []int{4, 4, 4, 4},
+			Type:   []string{"F", "F", "F", "F"},
+			Count:  []int{1, 1, 1, 1},
+			Width:  3,
+			Height: 1,
+		},
+		Points: 3,
+		Data:   make([]byte, 3*16),
+	}
+
+	if ok := t.Run("SetColor", func(t *testing.T) {
+		vt, err := pp.Vec3Iterator()
+		if err != nil {
+			t.Fatal(err)
+		}
+		ct, err := pp.ColorIterator()
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, p := range points {
+			vt.SetVec3(p.v)
+			ct.SetColor(p.color)
+			vt.Incr()
+			ct.Incr()
+		}
+	}); !ok {
+		t.FailNow()
+	}
+
+	t.Run("Color", func(t *testing.T) {
+		ct, err := pp.ColorIterator()
+		if err != nil {
+			t.Fatal(err)
+		}
+		for i, e := range points {
+			if !ct.IsValid() {
+				t.Fatalf("ColorIterator not valid at point %d", i)
+			}
+			if c := ct.Color(); c != e.color {
+				t.Errorf("Point %d: expected %v, got %v", i, e.color, c)
+			}
+			ct.Incr()
+		}
+		if ct.IsValid() {
+			t.Error("ColorIterator should be exhausted")
+		}
+	})
+
+	t.Run("ColorAt", func(t *testing.T) {
+		ct, err := pp.ColorIterator()
+		if err != nil {
+			t.Fatal(err)
+		}
+		for i, e := range points {
+			if c := ct.ColorAt(i); c != e.color {
+				t.Errorf("Point %d: expected %v, got %v", i, e.color, c)
+			}
+		}
+	})
+
+	t.Run("RawIndex", func(t *testing.T) {
+		ct, err := pp.ColorIterator()
+		if err != nil {
+			t.Fatal(err)
+		}
+		for i := 0; ct.IsValid(); ct.Incr() {
+			if ri := ct.RawIndex(); ri != i {
+				t.Errorf("%d: Expected RawIndex: %d, got: %d", i, i, ri)
+			}
+			i++
+		}
+	})
+}
+
+func TestColorIteratorRGBAField(t *testing.T) {
+	pp := &PointCloud{
+		PointCloudHeader: PointCloudHeader{
+			Version: 0.7,
+			Fields:  []string{"x", "y", "z", "rgba"},
+			Size:    []int{4, 4, 4, 4},
+			Type:    []string{"F", "F", "F", "U"},
+			Count:   []int{1, 1, 1, 1},
+			Width:   1,
+			Height:  1,
+		},
+		Points: 1,
+		Data:   make([]byte, 16),
+	}
+
+	ct, err := pp.ColorIterator()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := Color{R: 255, G: 128, B: 64, A: 200}
+	ct.SetColor(expected)
+
+	ct2, err := pp.ColorIterator()
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := ct2.Color()
+	if got != expected {
+		t.Errorf("Expected %v, got %v", expected, got)
+	}
+}
+
+func TestColorIteratorNoField(t *testing.T) {
+	pp := &PointCloud{
+		PointCloudHeader: PointCloudHeader{
+			Fields: []string{"x", "y", "z"},
+			Size:   []int{4, 4, 4},
+			Type:   []string{"F", "F", "F"},
+			Count:  []int{1, 1, 1},
+		},
+	}
+
+	_, err := pp.ColorIterator()
+	if err == nil {
+		t.Error("Expected error for missing rgb/rgba field")
+	}
+}
+
 func TestVec3Iterator(t *testing.T) {
 	testCases := map[string]struct {
 		in            *PointCloud
