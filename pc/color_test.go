@@ -16,6 +16,7 @@ func TestColorPackUnpack(t *testing.T) {
 	}
 
 	for _, c := range testCases {
+		c := c
 		t.Run("Uint32", func(t *testing.T) {
 			v := c.Uint32()
 			got := ColorFromUint32(v)
