@@ -62,7 +62,7 @@ jobs:
         uses: actions/setup-go@v7
         with:
           go-version: ${{ matrix.go }}
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
       - name: Get go_js_wasm_exec
