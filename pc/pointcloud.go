@@ -186,3 +186,24 @@ func (pp *PointCloud) Uint32Iterator(name string) (Uint32Iterator, error) {
 	}
 	return nil, errors.New("invalid field name")
 }
+
+// ColorIterator returns a ColorIterator for the "rgb" or "rgba" field.
+// It looks for "rgb" first, then "rgba".
+func (pp *PointCloud) ColorIterator() (ColorIterator, error) {
+	for _, name := range []string{"rgb", "rgba"} {
+		offset := 0
+		for i, fn := range pp.Fields {
+			if fn == name {
+				return &colorIterator{
+					binaryIterator: binaryIterator{
+						data:   pp.Data,
+						pos:    offset,
+						stride: pp.Stride(),
+					},
+				}, nil
+			}
+			offset += pp.Size[i] * pp.Count[i]
+		}
+	}
+	return nil, errors.New("no rgb or rgba field found")
+}

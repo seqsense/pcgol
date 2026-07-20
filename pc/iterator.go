@@ -204,6 +204,24 @@ type Uint32ConstForwardIterator interface {
 	RawIndex() int
 }
 
+type ColorIterator interface {
+	ColorForwardIterator
+	ColorAt(int) Color
+}
+
+type ColorForwardIterator interface {
+	ColorConstForwardIterator
+	SetColor(Color)
+}
+
+type ColorConstForwardIterator interface {
+	Incr()
+	IsValid() bool
+	Color() Color
+	// RawIndex returns the index of the current item on the base PointCloud storage
+	RawIndex() int
+}
+
 type binaryUint32Iterator struct {
 	binaryIterator
 }
@@ -230,3 +248,27 @@ func (i *binaryUint32Iterator) IsValid() bool {
 func (i *binaryUint32Iterator) RawIndexAt(j int) int {
 	return i.RawIndex() + j
 }
+
+type colorIterator struct {
+	binaryIterator
+}
+
+func (i *colorIterator) Color() Color {
+	v := binary.LittleEndian.Uint32(i.data[i.pos : i.pos+4])
+	return ColorFromUint32(v)
+}
+
+func (i *colorIterator) ColorAt(j int) Color {
+	pos := i.pos + i.stride*j
+	v := binary.LittleEndian.Uint32(i.data[pos : pos+4])
+	return ColorFromUint32(v)
+}
+
+func (i *colorIterator) SetColor(c Color) {
+	binary.LittleEndian.PutUint32(i.data[i.pos:i.pos+4], c.Uint32())
+}
+
+func (i *colorIterator) IsValid() bool {
+	return i.pos+4 <= len(i.data)
+}
+
