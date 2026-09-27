@@ -73,8 +73,7 @@ type PointCloud struct {
 	PointCloudHeader
 	Points int
 
-	Data      []byte
-	dataFloat []float32
+	Data []byte
 }
 
 // Copy copies n points from src to dst.
@@ -93,11 +92,8 @@ func (pp *PointCloud) Float32Iterator(name string) (Float32Iterator, error) {
 		if fn == name {
 			if pp.Stride()&3 == 0 && offset&3 == 0 {
 				// Aligned
-				if pp.dataFloat == nil || float.IsShadowing(pp.Data, pp.dataFloat) {
-					pp.dataFloat = float.ByteSliceAsFloat32Slice(pp.Data)
-				}
 				return &float32Iterator{
-					data:   pp.dataFloat,
+					data:   float.ByteSliceAsFloat32Slice(pp.Data),
 					pos:    offset / 4,
 					stride: pp.Stride() / 4,
 				}, nil

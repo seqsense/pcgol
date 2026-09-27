@@ -132,3 +132,62 @@ func TestCopy(t *testing.T) {
 		t.Errorf("Expected data: %v, got: %v", bytesExpected, pp1.Data)
 	}
 }
+
+func TestPointCloud_IteratorAfterDataResize(t *testing.T) {
+	const stride = 4 * 3
+	pp := &PointCloud{
+		PointCloudHeader: PointCloudHeader{
+			Fields: []string{"x", "y", "z"},
+			Size:   []int{4, 4, 4},
+			Type:   []string{"F", "F", "F"},
+			Count:  []int{1, 1, 1},
+			Width:  4,
+			Height: 1,
+		},
+		Points: 4,
+	}
+	buf := make([]byte, 8*stride)
+	pp.Data = buf[:4*stride]
+
+	if _, err := pp.Vec3Iterator(); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Run("Grow", func(t *testing.T) {
+		// Same backing array, longer view
+		pp.Data = buf[:8*stride]
+		pp.Points = 8
+		pp.Width = 8
+
+		it, err := pp.Vec3Iterator()
+		if err != nil {
+			t.Fatal(err)
+		}
+		want := mat.Vec3{1, 2, 3}
+		for i := 0; i < pp.Points-1; i++ {
+			it.Incr()
+		}
+		it.SetVec3(want)
+		if got := it.Vec3(); !got.Equal(want) {
+			t.Errorf("Expected %v at the last point, got %v", want, got)
+		}
+	})
+	t.Run("Shrink", func(t *testing.T) {
+		// Same backing array, shorter view
+		pp.Data = buf[:2*stride]
+		pp.Points = 2
+		pp.Width = 2
+
+		it, err := pp.Vec3Iterator()
+		if err != nil {
+			t.Fatal(err)
+		}
+		n := 0
+		for ; it.IsValid(); it.Incr() {
+			n++
+		}
+		if n != 2 {
+			t.Errorf("Expected 2 valid points, got %d", n)
+		}
+	})
+}
