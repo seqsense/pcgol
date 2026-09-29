@@ -30,7 +30,3 @@ func Float32SliceAsByteSlice(f []float32) []byte {
 
 	return buf
 }
-
-func IsShadowing(b []byte, f []float32) bool {
-	return uintptr(unsafe.Pointer(&f[0])) != uintptr(unsafe.Pointer(&b[0]))
-}
